@@ -164,6 +164,20 @@ button:focus-visible,.tab:focus-visible{outline:3px solid var(--blue);outline-of
 #sum-ok{color:var(--good)} #sum-mid{color:var(--blue)} #sum-low{color:var(--warn)}
 .item .nota{font-variant-numeric:tabular-nums;font-weight:800}
 
+/* Lugares y conversaciones */
+.ctx-now{margin:2px 0 0;font-weight:800;color:var(--blue);font-size:15px}
+.ctx-pick{display:flex;flex-direction:column;gap:8px}
+.ctx-label{font-weight:800;font-size:14px;color:var(--muted)}
+.convs{display:flex;flex-direction:column;gap:10px;padding-top:8px}
+.convs h2{font-size:20px}
+.conv{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.conv summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:52px}
+.conv summary::-webkit-details-marker{display:none}
+.conv summary b{font-family:var(--font-display);font-weight:600;font-size:17px}
+.conv summary span{color:var(--muted);font-size:13px;font-weight:700;text-align:right}
+.conv-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.conv-text{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;font-size:17px;font-weight:700;line-height:1.4}
+.conv-text time{display:block;font-size:12px;color:var(--muted)}
 /* Practicar (nuevo) */
 .word-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;padding-block:6px}
 .word{font-family:var(--font-display);font-weight:600;font-size:clamp(40px,13vw,64px);line-height:1.1;text-align:center;overflow-wrap:anywhere;letter-spacing:.01em}
@@ -409,8 +423,13 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     <!-- SUBTÍTULOS -->
     <section id="v-subs" aria-labelledby="t-subs" hidden>
       <div class="subs-head">
-        <h1 id="t-subs">Subtítulos en vivo</h1>
+        <div><h1 id="t-subs">Subtítulos en vivo</h1><p class="ctx-now" id="s-ctx-now">En clase</p></div>
         <div class="status" id="s-status"><span class="dot"></span><span id="s-status-text">Listo</span></div>
+      </div>
+
+      <div class="ctx-pick">
+        <span class="ctx-label" id="ctx-label">¿Dónde estás?</span>
+        <div class="levels" role="radiogroup" aria-labelledby="ctx-label" id="s-ctx"></div>
       </div>
 
       <div class="mascot" id="s-mascot">
@@ -459,6 +478,12 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
         <button class="btn" id="s-clear">Borrar</button>
       </div>
       <button class="btn" id="s-copy">Copiar todo el texto</button>
+
+      <div class="convs">
+        <h2>Mis conversaciones</h2>
+        <p class="muted small">Cada vez que detienes el micrófono, la conversación se guarda aquí con el lugar y la hora.</p>
+        <div id="s-convs"></div>
+      </div>
     </section>
 
     <!-- PRONUNCIACIÓN -->
@@ -825,6 +850,7 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     });
     if (v !== 'subs' && subMode) stopSubs();
     if (v === 'prog') renderProg();
+    if (v === 'subs'){ pickCtx(ctx, true); renderConvs(); }
     if (v === 'perfil') renderPerfil();
     if (v === 'nps') renderNps();
     if (v === 'admin'){ if (!isAdmin()){ show('perfil'); return; } renderAdmin(); }
@@ -871,6 +897,80 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     var p = document.createElement('span'); p.className = 'said'; p.textContent = text.replace(/^([¿¡"'(\s]*)(\S)/, function(m, pre, c){ return pre + c.toUpperCase(); });
     div.appendChild(t); div.appendChild(p); box.appendChild(div);
     box.scrollTop = box.scrollHeight;
+    if (subMode === 'mic' || subMode === 'starting'){ if (!convStart) convStart = Date.now(); curLines.push({ t: t.textContent, text: p.textContent }); }
+  }
+
+  /* Lugares: cada uno trae su consejo y sus ajustes */
+  var CTX = [
+    { id:'clase',   name:'En clase',       label:'Clase',      size:30, hc:false, tip:'Pon el celular adelante, cerca de la profe. Al final la clase queda guardada como apuntes.' },
+    { id:'reunion', name:'En una reunión', label:'Reunión',    size:30, hc:false, tip:'Pon el celular en el centro de la mesa. Cada frase queda con la hora en que se dijo.' },
+    { id:'amigos',  name:'Con amigos',     label:'Amigos',     size:32, hc:false, tip:'Pon el celular en el centro y pídeles que hablen de a uno para que salga mejor.' },
+    { id:'fiesta',  name:'En una fiesta',  label:'Fiesta',     size:38, hc:true,  tip:'Hay mucho ruido: acerca el celular a quien te habla. Puse letra más grande y alto contraste.' },
+    { id:'medico',  name:'En el médico',   label:'Médico',     size:32, hc:false, tip:'Pon el celular cerca del médico. Si algo no queda claro, pídele que lo repita.' },
+    { id:'otro',    name:'Conversación',   label:'Otro lugar', size:30, hc:false, tip:'Pon el celular cerca de quien habla.' }
+  ];
+  var ctx = CTX[0];
+  try { var savedCtx = localStorage.getItem('coclia-lugar'); CTX.forEach(function(c){ if (c.id === savedCtx) ctx = c; }); } catch(e){}
+  var ctxBox = $('s-ctx');
+  CTX.forEach(function(c){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'level'; b.textContent = c.label;
+    b.setAttribute('role', 'radio'); b.dataset.id = c.id;
+    b.addEventListener('click', function(){ pickCtx(c); });
+    ctxBox.appendChild(b);
+  });
+  function pickCtx(c, quiet){
+    if (subMode && !quiet) stopSubs();
+    ctx = c;
+    try { localStorage.setItem('coclia-lugar', c.id); } catch(e){}
+    Array.prototype.forEach.call(ctxBox.children, function(b){ var on = b.dataset.id === c.id; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    $('s-ctx-now').textContent = c.name;
+    if (!quiet){ setSize(c.size); box.classList.toggle('hc', c.hc); $('s-hc').setAttribute('aria-pressed', c.hc ? 'true' : 'false'); }
+    if (!subMode) $('s-tip').textContent = c.tip;
+  }
+
+  /* Conversaciones guardadas */
+  var curLines = [], convStart = 0;
+  function saveConv(){
+    if (!curLines.length) return;
+    data.convs = data.convs || [];
+    data.convs.unshift({ id: Date.now().toString(36), ctx: ctx.id, start: convStart || Date.now(), end: Date.now(), lines: curLines.slice(0, 2000) });
+    if (data.convs.length > 30) data.convs = data.convs.slice(0, 30);
+    save();
+    curLines = []; convStart = 0;
+    renderConvs();
+  }
+  function ctxName(id){ var n = 'Conversación'; CTX.forEach(function(c){ if (c.id === id) n = c.name; }); return n; }
+  function fmtWhen(ms){ try { return new Date(ms).toLocaleString('es-CO', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit' }); } catch(e){ return ''; } }
+  function convText(cv){ return ctxName(cv.ctx) + ' · ' + fmtWhen(cv.start) + '\n\n' + cv.lines.map(function(l){ return l.t + '  ' + l.text; }).join('\n'); }
+  function renderConvs(){
+    var wrap = $('s-convs'); wrap.innerHTML = '';
+    var list = (data && data.convs) || [];
+    if (!list.length){ var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Todavía no hay conversaciones guardadas.'; wrap.appendChild(p); return; }
+    list.forEach(function(cv){
+      var d = document.createElement('details'); d.className = 'conv';
+      var sm = document.createElement('summary');
+      var b = document.createElement('b'); b.textContent = ctxName(cv.ctx);
+      var meta = document.createElement('span'); meta.textContent = fmtWhen(cv.start) + ' · ' + cv.lines.length + (cv.lines.length === 1 ? ' frase' : ' frases');
+      sm.appendChild(b); sm.appendChild(meta); d.appendChild(sm);
+      var body = document.createElement('div'); body.className = 'conv-body';
+      var tx = document.createElement('div'); tx.className = 'conv-text';
+      cv.lines.forEach(function(l){ var r = document.createElement('div'); var t = document.createElement('time'); t.textContent = l.t; r.appendChild(t); r.appendChild(document.createTextNode(l.text)); tx.appendChild(r); });
+      body.appendChild(tx);
+      var row = document.createElement('div'); row.className = 'row';
+      var cp = document.createElement('button'); cp.type = 'button'; cp.className = 'btn sm'; cp.textContent = 'Copiar';
+      cp.addEventListener('click', function(){
+        var txt = convText(cv);
+        function done(m){ cp.textContent = m; setTimeout(function(){ cp.textContent = 'Copiar'; }, 1800); }
+        try { navigator.clipboard.writeText(txt).then(function(){ done('Copiado'); }, function(){ done('No se pudo copiar'); }); } catch(e){ done('No se pudo copiar'); }
+      });
+      var del = document.createElement('button'); del.type = 'button'; del.className = 'btn sm'; del.textContent = 'Borrar';
+      del.addEventListener('click', function(){
+        if (del.dataset.sure !== '1'){ del.dataset.sure = '1'; del.textContent = '¿Seguro? Toca otra vez'; setTimeout(function(){ del.dataset.sure = ''; del.textContent = 'Borrar'; }, 3000); return; }
+        data.convs = data.convs.filter(function(x){ return x.id !== cv.id; }); save(); renderConvs();
+      });
+      row.appendChild(cp); row.appendChild(del); body.appendChild(row);
+      d.appendChild(body); wrap.appendChild(d);
+    });
   }
 
   function setState(state, tip){
@@ -881,7 +981,7 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     $('s-mic').setAttribute('aria-label', on ? 'Detener el micrófono' : 'Activar el micrófono');
     $('s-mic-label').textContent = on ? 'Toca para detener' : state === 'starting' ? 'Activando…' : 'Activar micrófono';
     $('s-mascot').classList.toggle('listening', on);
-    $('s-tip').textContent = tip || (on ? 'Te escucho. Lo que digan aparece abajo.' : 'Toca el micrófono y pon el celular cerca de quien habla.');
+    $('s-tip').textContent = tip || (on ? 'Te escucho. Lo que digan aparece abajo.' : ctx.tip);
   }
   function showAlert(title, text){ $('s-alert-title').textContent = title; $('s-alert-text').textContent = text; $('s-alert').hidden = false; }
   function hideAlert(){ $('s-alert').hidden = true; }
@@ -965,16 +1065,17 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
 
   function stopSubs(silent){
     var was = subMode === 'mic';
-    subMode = null;
     if (rec){ try { rec.onend = null; rec.onerror = null; rec.stop(); } catch(e){} rec = null; }
     if (interimEl && interimEl.textContent) addLine(interimEl.textContent);
+    subMode = null;
+    saveConv();
     setInterim('');
     keepAwake(false);
     if (was && startedAt){
       data.subMin += (Date.now() - startedAt) / 60000; startedAt = 0;
       markDay(); save();
     }
-    if (!silent) setState(null, was ? 'Listo. Toca el micrófono para seguir.' : null);
+    if (!silent) setState(null, was ? 'Listo. La conversación quedó guardada abajo, en Mis conversaciones.' : null);
   }
 
   $('s-mic').addEventListener('click', function(){ if (subMode) stopSubs(); else startSubs(); });
