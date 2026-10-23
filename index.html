@@ -98,6 +98,12 @@ button:focus-visible,.tab:focus-visible{outline:3px solid var(--blue);outline-of
 .who.profe{background:rgba(91,155,255,.18);color:var(--blue)}
 .who.est{background:rgba(155,123,255,.22);color:var(--violet)}
 .hc .who{background:none;color:#FFE65C;border:1px solid #FFE65C}
+.who.s0{background:rgba(91,155,255,.18);color:var(--blue)}
+.who.s1{background:rgba(155,123,255,.22);color:var(--violet)}
+.who.s2{background:rgba(78,214,164,.16);color:var(--good)}
+.line-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.line.example{opacity:.95}
+.status.demo .dot{background:var(--violet)}
 .play{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--blue);display:grid;place-items:center;cursor:pointer;flex:none}
 .play:hover{border-color:var(--blue)}
 .hc .play{background:#000;border-color:#FFE65C;color:#FFE65C}
@@ -470,6 +476,10 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
         </button>
         <span class="mic-label" id="s-mic-label">Activar micrófono</span>
       </div>
+      <button class="btn" id="s-demo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+        <span id="s-demo-label">Ver ejemplo: en clase</span>
+      </button>
 
       <div class="tools">
         <button class="btn" id="s-smaller" aria-label="Letra más pequeña">A−</button>
@@ -887,15 +897,23 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     interimEl.textContent = text;
     box.scrollTop = box.scrollHeight;
   }
-  function addLine(text){
+  function addLine(text, who, whoIdx){
     text = (text || '').trim();
     if (!text) return;
     setInterim('');
     clearEmpty();
-    var div = document.createElement('div'); div.className = 'line';
+    var div = document.createElement('div'); div.className = 'line' + (who ? ' example' : '');
     var t = document.createElement('time'); t.textContent = timeNow();
+    if (who){
+      var head = document.createElement('div'); head.className = 'line-head';
+      var w = document.createElement('span'); w.className = 'who s' + (whoIdx || 0); w.textContent = who;
+      head.appendChild(w); head.appendChild(t);
+      div.appendChild(head);
+      t = { textContent: t.textContent, _inHead: true };
+    }
     var p = document.createElement('span'); p.className = 'said'; p.textContent = text.replace(/^([¿¡"'(\s]*)(\S)/, function(m, pre, c){ return pre + c.toUpperCase(); });
-    div.appendChild(t); div.appendChild(p); box.appendChild(div);
+    if (!t._inHead) div.appendChild(t);
+    div.appendChild(p); box.appendChild(div);
     box.scrollTop = box.scrollHeight;
     if (subMode === 'mic' || subMode === 'starting'){ if (!convStart) convStart = Date.now(); curLines.push({ t: t.textContent, text: p.textContent }); }
   }
@@ -924,6 +942,7 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     try { localStorage.setItem('coclia-lugar', c.id); } catch(e){}
     Array.prototype.forEach.call(ctxBox.children, function(b){ var on = b.dataset.id === c.id; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
     $('s-ctx-now').textContent = c.name;
+    $('s-demo-label').textContent = 'Ver ejemplo: ' + c.name.charAt(0).toLowerCase() + c.name.slice(1);
     if (!quiet){ setSize(c.size); box.classList.toggle('hc', c.hc); $('s-hc').setAttribute('aria-pressed', c.hc ? 'true' : 'false'); }
     if (!subMode) $('s-tip').textContent = c.tip;
   }
@@ -974,12 +993,13 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
   }
 
   function setState(state, tip){
-    var st = $('s-status'), on = state === 'listening';
-    st.className = 'status' + (on ? ' on' : state === 'starting' ? ' wait' : '');
-    $('s-status-text').textContent = on ? 'Escuchando' : state === 'starting' ? 'Activando…' : 'Listo';
+    var st = $('s-status'), demo = state === 'demo', on = state === 'listening' || demo;
+    st.className = 'status' + (demo ? ' on demo' : on ? ' on' : state === 'starting' ? ' wait' : '');
+    $('s-status-text').textContent = demo ? 'Ejemplo' : on ? 'Escuchando' : state === 'starting' ? 'Activando…' : 'Listo';
     $('s-mic').classList.toggle('on', on);
-    $('s-mic').setAttribute('aria-label', on ? 'Detener el micrófono' : 'Activar el micrófono');
-    $('s-mic-label').textContent = on ? 'Toca para detener' : state === 'starting' ? 'Activando…' : 'Activar micrófono';
+    $('s-mic').setAttribute('aria-label', on ? (demo ? 'Detener el ejemplo' : 'Detener el micrófono') : 'Activar el micrófono');
+    $('s-mic-label').textContent = on ? (demo ? 'Toca para detener el ejemplo' : 'Toca para detener') : state === 'starting' ? 'Activando…' : 'Activar micrófono';
+    $('s-demo').hidden = on || state === 'starting';
     $('s-mascot').classList.toggle('listening', on);
     $('s-tip').textContent = tip || (on ? 'Te escucho. Lo que digan aparece abajo.' : ctx.tip);
   }
@@ -1003,7 +1023,7 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     var m = explain(code);
     stopSubs(true);
     showAlert(m[0], m[1]);
-    setState(null, 'No pude escuchar. Mira el aviso de arriba.');
+    setState(null, 'No pude escuchar. Mira el aviso de arriba. Mientras tanto, toca “Ver ejemplo” para ver cómo funcionan.');
   }
 
   function keepAwake(on){
@@ -1064,6 +1084,7 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
   }
 
   function stopSubs(silent){
+    if (subMode === 'demo'){ stopDemo(); return; }
     var was = subMode === 'mic';
     if (rec){ try { rec.onend = null; rec.onerror = null; rec.stop(); } catch(e){} rec = null; }
     if (interimEl && interimEl.textContent) addLine(interimEl.textContent);
@@ -1077,6 +1098,108 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
     }
     if (!silent) setState(null, was ? 'Listo. La conversación quedó guardada abajo, en Mis conversaciones.' : null);
   }
+
+  /* Ejemplos de conversación por lugar (se escuchan y se leen; no se guardan) */
+  var DEMOS = {
+    clase: [
+      { who:'Profe', text:'Buenos días. Hoy vamos a practicar los saludos en inglés.' },
+      { who:'Profe', text:'Hello! How are you?', lang:'en' },
+      { who:'Profe', text:'Eso significa: ¡Hola! ¿Cómo estás?' },
+      { who:'Estudiante', text:'I am fine, thank you. And you?', lang:'en' },
+      { who:'Profe', text:'¡Muy bien! Ahora escriban en el cuaderno.' },
+      { who:'Profe', text:'Nice to meet you.', lang:'en' },
+      { who:'Profe', text:'Significa: mucho gusto. Para el lunes, practiquen con un compañero.' }
+    ],
+    reunion: [
+      { who:'Jefe', text:'Buenas tardes a todos. Empecemos la reunión.' },
+      { who:'Jefe', text:'Esta semana tenemos que entregar el informe de ventas.' },
+      { who:'Laura', text:'Yo puedo tener lista la parte de clientes para el jueves.' },
+      { who:'Jefe', text:'Perfecto. ¿Alguien tiene alguna pregunta?' },
+      { who:'Andrés', text:'¿La entrega es por correo o en persona?' },
+      { who:'Jefe', text:'Por correo, antes de las cinco de la tarde.' }
+    ],
+    amigos: [
+      { who:'Ana', text:'¡Hola! ¿Qué vamos a hacer el sábado?' },
+      { who:'Juan', text:'Podemos ir a cine y después a comer hamburguesas.' },
+      { who:'Ana', text:'Dale. ¿A qué hora nos vemos?' },
+      { who:'Juan', text:'A las cuatro, en el centro comercial.' },
+      { who:'Ana', text:'Listo, le aviso a Camila para que venga.' }
+    ],
+    fiesta: [
+      { who:'Carlos', text:'¡Qué buena está la música!' },
+      { who:'Carlos', text:'Mira a esa mujer, está muy bonita.' },
+      { who:'Carlos', text:'Me voy a bailar con ella.' },
+      { who:'Pedro', text:'¡Dale, anímate! Ahora van a poner salsa.' },
+      { who:'Carlos', text:'¿Me guardas la chaqueta mientras bailo?' },
+      { who:'Pedro', text:'Claro, aquí te espero.' }
+    ],
+    medico: [
+      { who:'Médica', text:'Buenos días. ¿Cómo se ha sentido esta semana?' },
+      { who:'Paciente', text:'Mejor, pero a veces me duele la cabeza en la tarde.' },
+      { who:'Médica', text:'Le voy a recetar un medicamento. Tómelo cada ocho horas, después de comer.' },
+      { who:'Paciente', text:'¿Por cuántos días?' },
+      { who:'Médica', text:'Por cinco días. Si sigue el dolor, vuelva a la cita.' }
+    ],
+    otro: [
+      { who:'Vendedor', text:'Buenas, ¿qué le puedo ofrecer?' },
+      { who:'Cliente', text:'Una libra de tomate y dos aguacates, por favor.' },
+      { who:'Vendedor', text:'Son ocho mil pesos.' },
+      { who:'Cliente', text:'Aquí tiene. Muchas gracias.' }
+    ]
+  };
+  var demoRun = 0, demoTimers = [];
+  function voiceFor(lang){
+    if (!('speechSynthesis' in window)) return null;
+    var vs = speechSynthesis.getVoices(), re = lang === 'en' ? /^en[-_]/i : /^es[-_](CO|MX|US|419)/i;
+    return vs.filter(function(v){ return re.test(v.lang); })[0] || vs.filter(function(v){ return new RegExp('^' + (lang === 'en' ? 'en' : 'es'), 'i').test(v.lang); })[0] || null;
+  }
+  function speakLine(line, idx, done){
+    var finished = false;
+    function fin(){ if (finished) return; finished = true; done(); }
+    var fallback = setTimeout(fin, line.text.length * 85 + 1800); demoTimers.push(fallback);
+    if (!('speechSynthesis' in window)) return;
+    try {
+      var u = new SpeechSynthesisUtterance(line.text), v = voiceFor(line.lang || 'es');
+      if (v) u.voice = v; u.lang = v ? v.lang : (line.lang === 'en' ? 'en-US' : 'es-ES');
+      u.rate = line.lang === 'en' ? 0.85 : 0.95; u.pitch = [0.9, 1.25, 1.05][idx % 3]; u.volume = 1;
+      u.onend = function(){ clearTimeout(fallback); fin(); }; u.onerror = function(){ clearTimeout(fallback); fin(); };
+      window.__cocliaDemoU = u;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function startDemo(){
+    hideAlert();
+    if (subMode) stopSubs();
+    var lines = DEMOS[ctx.id] || DEMOS.otro, run = ++demoRun, i = 0, speakers = [];
+    lines.forEach(function(l){ if (speakers.indexOf(l.who) < 0) speakers.push(l.who); });
+    try { if ('speechSynthesis' in window){ speechSynthesis.cancel(); speechSynthesis.resume(); } } catch(e){}
+    subMode = 'demo';
+    setState('demo', 'Este es un ejemplo de cómo se ven los subtítulos ' + ctx.name.charAt(0).toLowerCase() + ctx.name.slice(1) + '. No se guarda.');
+    var mark = document.createElement('div'); mark.className = 'empty'; mark.textContent = '— Ejemplo: ' + ctx.name + ' —';
+    clearEmpty(); box.appendChild(mark);
+    (function next(){
+      if (subMode !== 'demo' || run !== demoRun) return;
+      if (i >= lines.length){ stopDemo(true); return; }
+      var l = lines[i], who = speakers.indexOf(l.who), words = l.text.split(' '), w = 0;
+      var tick = setInterval(function(){ if (w < words.length){ w++; setInterim(words.slice(0, w).join(' ')); } }, 260);
+      demoTimers.push(tick);
+      speakLine(l, who, function(){
+        clearInterval(tick);
+        if (subMode !== 'demo' || run !== demoRun) return;
+        addLine(l.text, l.who, who); i++;
+        var t = setTimeout(next, 600); demoTimers.push(t);
+      });
+    })();
+  }
+  function stopDemo(ended){
+    demoRun++;
+    demoTimers.forEach(function(t){ clearTimeout(t); clearInterval(t); }); demoTimers = [];
+    try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e){}
+    setInterim('');
+    subMode = null;
+    setState(null, ended ? 'Así se verán los subtítulos. Para usarlos de verdad, toca el micrófono.' : 'Ejemplo detenido.');
+  }
+  $('s-demo').addEventListener('click', startDemo);
 
   $('s-mic').addEventListener('click', function(){ if (subMode) stopSubs(); else startSubs(); });
   function setSize(n){
@@ -1096,7 +1219,8 @@ textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var
   $('s-copy').addEventListener('click', function(){
     var btn = this;
     var text = Array.prototype.map.call(box.querySelectorAll('.line:not(.interim)'), function(l){
-      return l.querySelector('time').textContent + '  ' + l.querySelector('.said').textContent;
+      var w = l.querySelector('.who');
+      return l.querySelector('time').textContent + '  ' + (w ? w.textContent + ': ' : '') + l.querySelector('.said').textContent;
     }).join('\n');
     function done(msg){ btn.textContent = msg; setTimeout(function(){ btn.textContent = 'Copiar todo el texto'; }, 1800); }
     if (!text) return done('Todavía no hay texto');
