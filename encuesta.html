@@ -180,6 +180,8 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 .comment.card{padding:16px;gap:6px}
 .head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .head-right .linkbtn{min-height:40px}
+.op-del{align-self:flex-start;margin-top:4px}
+.danger-card{border-color:rgba(255,184,107,.45)}
 .op-name{color:var(--fg);font-size:15px;font-weight:800}
 .op-text{font-size:17px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -459,6 +461,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
         <li><b>Compara rondas</b> después de cada mejora del prototipo.</li>
       </ol>
     </details>
+    <button type="button" class="btn danger" id="go-delete">Eliminar resultados</button>
   </section>
 
   <!-- OPINIONES -->
@@ -535,17 +538,29 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     </div>
 
     <div class="card">
-      <h3>Exportar y borrar</h3>
+      <h3>Guardar una copia</h3>
       <button class="btn" id="export">Copiar todas las respuestas (para Excel)</button>
       <textarea class="csv-box" id="export-box" readonly hidden aria-label="Respuestas en formato CSV"></textarea>
       <p class="ok-msg" id="export-ok" role="status" hidden></p>
-      <button class="btn danger" id="clear">Borrar respuestas guardadas en este celular</button>
-      <div class="row" id="clear-confirm" hidden>
-        <span style="flex-basis:100%;font-weight:700">¿Borrar las respuestas de este celular y las pegadas? Las de Google Sheets no se tocan: esas se borran en la hoja.</span>
-        <button class="btn" id="clear-no">Cancelar</button>
-        <button class="btn danger-solid" id="clear-yes">Sí, borrar</button>
+    </div>
+
+    <div class="card danger-card" id="del-card">
+      <h3>Eliminar resultados</h3>
+      <p class="muted small">Para quitar una sola respuesta (por ejemplo, una de prueba), ve a <b>Opiniones</b> y toca <b>Eliminar</b> en esa respuesta.</p>
+      <div class="field">
+        <label for="del-what">¿Qué quieres eliminar?</label>
+        <select class="sel" id="del-what"></select>
+      </div>
+      <button class="btn danger" id="clear">Eliminar resultados</button>
+      <div id="clear-confirm" style="display:flex;flex-direction:column;gap:10px" hidden>
+        <p style="font-weight:700" id="clear-q"></p>
+        <div class="row">
+          <button class="btn" id="clear-no">Cancelar</button>
+          <button class="btn danger-solid" id="clear-yes">Sí, eliminar</button>
+        </div>
       </div>
       <p class="ok-msg" id="clear-ok" role="status" hidden></p>
+      <p class="muted small" id="del-sheet-note" hidden>Las respuestas de Google Sheets se eliminan directamente en la hoja de Google.</p>
     </div>
   </section>
 
@@ -849,6 +864,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     } else sha(p.salt + '|' + a).then(function(h){ if (h !== p.hash) return fail('PIN incorrecto.'); enter(); });
   });
   // Los resultados pueden prender o apagar el modo encuestador
+  window.__cocliaAfterDelete = function(){ renderTeam(); };
   window.__cocliaSetKiosk = function(on){ kiosk = !!on || location.hash === '#encuestador'; $('mode-tag').hidden = !kiosk; $('team').hidden = !kiosk; renderTeam(); };
 
   var art = document.querySelector('#v-start .mascot svg');
@@ -1153,6 +1169,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       if (x.hasDiff === 'si') extra.push('Tiene dificultades de comunicación');
       if (x.source) extra.push(NAMES.source[x.source]);
       if (extra.length) card.appendChild(el('p', 'muted small', extra.join(' · ')));
+      var del = el('button', 'btn sm danger op-del', 'Eliminar esta respuesta'); del.type = 'button';
+      del.addEventListener('click', function(){
+        if (x.origin === 'hoja'){ del.textContent = 'Esta respuesta está en Google Sheets: elimínala en la hoja.'; del.disabled = true; return; }
+        if (del.dataset.sure !== '1'){ del.dataset.sure = '1'; del.textContent = '¿Seguro? Toca otra vez para eliminar'; del.classList.add('danger-solid'); setTimeout(function(){ if (del.isConnected){ del.dataset.sure = ''; del.textContent = 'Eliminar esta respuesta'; del.classList.remove('danger-solid'); } }, 4000); return; }
+        removeResponses(function(r){ return keyOf(r) === keyOf(x); });
+        afterDelete();
+      });
+      card.appendChild(del);
       box.appendChild(card);
     });
   }
@@ -1218,6 +1242,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       : sheetStatus === 'ok' ? 'Conectado. Se actualiza cada minuto.' : sheetStatus === 'clave' ? 'La clave no es correcta.' : sheetStatus === 'cargando' ? 'Conectando…' : 'No se pudo conectar. Revisa la dirección y tu internet.';
     $('round-now').textContent = currentRound();
     $('kiosk').checked = read(KIOSK, false) === true;
+    fillDelete();
   }
   $('sheet-save').addEventListener('click', function(){
     msg('sheet-err', '');
@@ -1271,14 +1296,51 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     function fallback(){ box.hidden = false; box.focus(); box.select(); msg('export-ok', 'Selecciona el texto y cópialo para pegarlo en Excel o Google Sheets.'); }
     try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; msg('export-ok', 'Copiadas ' + (rows.length - 1) + ' respuestas. Pégalas en Excel o Google Sheets.'); }, fallback); } catch(e){ fallback(); }
   });
-  $('clear').addEventListener('click', function(){ $('clear-confirm').hidden = false; this.hidden = true; msg('clear-ok', ''); });
+  /* Elimina del celular (y de las pegadas) las respuestas que cumplan la condición. Devuelve cuántas. */
+  function removeResponses(match){
+    var n = 0, s = read(LOCAL, null), answered = read('coclia-respondio', {}), pend = read('coclia-encuesta-pendientes', []);
+    if (s && s.responses) Object.keys(s.responses).forEach(function(k){
+      var r = normalize(s.responses[k], 'celular');
+      if (r && match(r)){ delete s.responses[k]; n++; Object.keys(answered).forEach(function(rd){ if (answered[rd] === k) delete answered[rd]; }); pend = pend.filter(function(x){ return x.id !== k; }); }
+    });
+    if (s) write(LOCAL, s);
+    write('coclia-respondio', answered); write('coclia-encuesta-pendientes', pend);
+    var old = read(LEGACY, null);
+    if (old && old.responses) Object.keys(old.responses).forEach(function(k){
+      var x = old.responses[k], r = normalize({ id: 'v2-' + k, codigo: x.code, ronda: x.round, fecha: x.at ? new Date(x.at).toISOString() : '', nps: x.score, por_que: x.why }, 'celular');
+      if (r && match(r)){ delete old.responses[k]; n++; }
+    });
+    if (old) write(LEGACY, old);
+    var pasted = read(PASTED, []), keep = pasted.filter(function(o){ var r = normalize(o, 'pegada'); return !(r && match(r)); });
+    n += pasted.length - keep.length; write(PASTED, keep);
+    return n;
+  }
+  function afterDelete(){ render(); if (window.__cocliaAfterDelete) window.__cocliaAfterDelete(); }
+  function fillDelete(){
+    var sel = $('del-what'), keep = sel.value, list = all().filter(function(r){ return r.origin !== 'hoja'; }), rounds = {};
+    list.forEach(function(r){ rounds[r.round] = (rounds[r.round] || 0) + 1; });
+    sel.innerHTML = '';
+    var o = el('option', '', 'Todas las respuestas (' + list.length + ')'); o.value = '__todas'; sel.appendChild(o);
+    Object.keys(rounds).sort(function(a, b){ return a.localeCompare(b, 'es', { numeric: true }); }).forEach(function(r){ var op = el('option', '', 'Solo ' + r + ' (' + rounds[r] + ')'); op.value = r; sel.appendChild(op); });
+    if (Array.prototype.some.call(sel.options, function(op){ return op.value === keep; })) sel.value = keep;
+    $('clear').disabled = !list.length;
+    $('del-sheet-note').hidden = !all().some(function(r){ return r.origin === 'hoja'; });
+  }
+  $('clear').addEventListener('click', function(){
+    var v = $('del-what').value;
+    $('clear-q').textContent = v === '__todas' ? '¿Eliminar TODAS las respuestas? No se puede deshacer.' : '¿Eliminar las respuestas de ' + v + '? No se puede deshacer.';
+    $('clear-confirm').hidden = false; this.hidden = true; msg('clear-ok', '');
+  });
   $('clear-no').addEventListener('click', function(){ $('clear-confirm').hidden = true; $('clear').hidden = false; });
   $('clear-yes').addEventListener('click', function(){
-    [LOCAL, LEGACY, PASTED, 'coclia-respondio', 'coclia-encuesta-pendientes'].forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
+    var v = $('del-what').value;
+    var n = removeResponses(function(r){ return v === '__todas' || r.round === v; });
     $('clear-confirm').hidden = true; $('clear').hidden = false;
-    msg('clear-ok', 'Se borraron las respuestas de este celular.'); render(); if (window.__cocliaSetKiosk) window.__cocliaSetKiosk(read(KIOSK, false) === true);
+    msg('clear-ok', n ? 'Se eliminaron ' + n + (n === 1 ? ' respuesta.' : ' respuestas.') : 'No había respuestas para eliminar.');
+    afterDelete();
   });
 
+  $('go-delete').addEventListener('click', function(){ setTab('ajustes'); setTimeout(function(){ try { $('del-card').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch(e){} }, 50); });
   $('round-filter').addEventListener('change', function(){ roundView = this.value; render(); });
   $('refresh').addEventListener('click', function(){ var b = this; b.textContent = 'Actualizando…'; loadSheet().then(function(){ b.textContent = 'Actualizar'; render(); }); });
   // Si en otra pestaña de este celular llega una respuesta, se actualiza solo
