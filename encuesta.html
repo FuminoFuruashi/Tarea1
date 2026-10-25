@@ -221,6 +221,13 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       </ul>
       <button class="btn primary" id="go">Empezar</button>
     </div>
+    <div class="card" id="team" hidden>
+      <h3>Para el equipo</h3>
+      <p class="muted small" id="team-count">0 respuestas guardadas en este celular.</p>
+      <button class="btn" id="team-copy">Copiar respuestas para Resultados</button>
+      <textarea class="csv-box" id="team-box" readonly hidden aria-label="Respuestas en texto"></textarea>
+      <p class="ok-msg" id="team-ok" role="status" hidden></p>
+    </div>
   </section>
 
   <!-- PREGUNTAS -->
@@ -552,7 +559,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 
   $('copy-mine').addEventListener('click', function(){
     if (!last) return;
-    var cols = Object.keys(last), csv = cols.join(',') + '\n' + cols.map(function(c){ var v = String(last[c]); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',');
+    var csv = toCsv([last]);
     var box = $('mine-box'), ok = $('mine-ok'); box.value = csv;
     function fallback(){ box.hidden = false; box.focus(); box.select(); ok.textContent = 'Selecciona el texto y cópialo.'; ok.hidden = false; }
     try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiado. Pégalo en WhatsApp o en un correo.'; ok.hidden = false; }, fallback); } catch(e){ fallback(); }
@@ -571,6 +578,27 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     $('next-person').hidden = true;
     show('done');
   }
+  /* Equipo (solo en modo encuestador): copiar todo lo de este celular para pegarlo en Resultados */
+  var COLS = ['id','fecha','ronda','codigo','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
+  function toCsv(list){
+    return [COLS.join(',')].concat(list.map(function(r){ return COLS.map(function(c){ var v = String(r[c] == null ? '' : r[c]); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); })).join('\n');
+  }
+  function renderTeam(){
+    if (!kiosk) return;
+    var r = store().responses, n = Object.keys(r).length;
+    $('team').hidden = false;
+    $('team-count').textContent = n + (n === 1 ? ' respuesta guardada' : ' respuestas guardadas') + ' en este celular.';
+    $('team-copy').disabled = !n;
+  }
+  $('team-copy').addEventListener('click', function(){
+    var r = store().responses, csv = toCsv(Object.keys(r).map(function(k){ return r[k]; })), box = $('team-box'), ok = $('team-ok');
+    box.value = csv;
+    function fallback(){ box.hidden = false; box.focus(); box.select(); ok.textContent = 'Selecciona el texto y cópialo.'; ok.hidden = false; }
+    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiadas. Ahora abre Resultados › Datos › Agregar respuestas copiadas, y pégalas.'; ok.hidden = false; }, fallback); } catch(e){ fallback(); }
+  });
+  $('next-person').addEventListener('click', renderTeam);
+  renderTeam();
+
   var art = document.querySelector('#v-start .mascot svg');
   if (art) $('done-mascot').insertBefore(art.cloneNode(true), $('done-mascot').firstChild);
   ans = blank();
