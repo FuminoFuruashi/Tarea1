@@ -178,6 +178,8 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 .tabpane[hidden]{display:none}
 .guide summary{cursor:pointer;font-family:var(--font-display);font-size:18px;font-weight:600}
 .comment.card{padding:16px;gap:6px}
+.head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.head-right .linkbtn{min-height:40px}
 .op-name{color:var(--fg);font-size:15px;font-weight:800}
 .op-text{font-size:17px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -187,7 +189,10 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
   <header>
     <span class="logo-icon" aria-hidden="true"></span>
     <span class="logo-word" role="img" aria-label="Coclia"></span>
-    <span class="eyebrow head-link" id="mode-tag" hidden>Modo encuestador</span>
+    <span class="head-right">
+      <span class="eyebrow" id="mode-tag" hidden>Modo encuestador</span>
+      <button class="linkbtn" id="open-results">Resultados</button>
+    </span>
   </header>
 
   <!-- BIENVENIDA -->
@@ -231,7 +236,8 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     <div class="card" id="team" hidden>
       <h3>Para el equipo</h3>
       <p class="muted small" id="team-count">0 respuestas guardadas en este celular.</p>
-      <button class="btn" id="team-copy">Copiar respuestas para Resultados</button>
+      <p class="muted small">Míralas arriba en <b>Resultados</b>. Si usas otro celular para encuestar, cópialas aquí y pégalas en Resultados › Datos del celular principal.</p>
+      <button class="btn" id="team-copy">Copiar respuestas de este celular</button>
       <textarea class="csv-box" id="team-box" readonly hidden aria-label="Respuestas en texto"></textarea>
       <p class="ok-msg" id="team-ok" role="status" hidden></p>
     </div>
@@ -362,6 +368,187 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
         </div>
       </details>
     </div>
+  </section>
+
+  <!-- PIN DEL EQUIPO -->
+  <section id="v-lock" aria-labelledby="t-lock" hidden>
+    <button type="button" class="linkbtn" id="lock-back" style="align-self:flex-start;text-decoration:none">← Volver a la encuesta</button>
+    <form class="card" id="f-pin" novalidate>
+      <h1 id="t-lock">Resultados</h1>
+      <p class="muted" id="pin-help">Solo el equipo puede ver los resultados.</p>
+      <div class="field"><label for="pin1" id="pin1-label">PIN</label><input class="txt" id="pin1" type="password" inputmode="numeric" autocomplete="off" maxlength="6" style="letter-spacing:.3em"></div>
+      <div class="field" id="pin2-wrap" hidden><label for="pin2">Repite el PIN</label><input class="txt" id="pin2" type="password" inputmode="numeric" autocomplete="off" maxlength="6" style="letter-spacing:.3em"></div>
+      <p class="err" id="pin-err" role="alert" hidden></p>
+      <button class="btn violet" type="submit" id="pin-go">Entrar</button>
+      <button type="button" class="linkbtn" id="pin-forgot" style="align-self:center" hidden>Olvidé mi PIN</button>
+      <div id="pin-reset" style="display:flex;flex-direction:column;gap:10px" hidden>
+        <p style="font-weight:700">¿Crear un PIN nuevo? Las respuestas no se borran.</p>
+        <div class="row"><button type="button" class="btn" id="pin-reset-no">Cancelar</button><button type="button" class="btn violet" id="pin-reset-yes">Sí, crear PIN nuevo</button></div>
+      </div>
+    </form>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section id="v-results" aria-labelledby="t-results" hidden>
+    <div class="row" style="align-items:center;justify-content:space-between">
+      <button type="button" class="linkbtn" id="results-back" style="text-decoration:none">← Volver a la encuesta</button>
+      <button type="button" class="btn sm" id="results-lock">Cerrar resultados</button>
+    </div>
+
+
+  <div>
+    <h1 id="t-results">Resultados de la encuesta</h1>
+    <p class="muted" id="src-line">Cargando respuestas…</p>
+  </div>
+
+  <div class="card">
+    <div class="steps-top"><span id="goal-text">0 de 25 respuestas</span><span id="goal-pct">0 %</span></div>
+    <div class="track" aria-hidden="true"><div class="fill" id="goal-fill" style="width:0%"></div></div>
+    <div class="row" style="align-items:center">
+      <label for="round-filter" class="muted small" style="font-weight:800">Ver:</label>
+      <select class="sel" id="round-filter" style="flex:1"></select>
+      <button class="btn sm" id="refresh">Actualizar</button>
+    </div>
+  </div>
+
+  <nav class="tabsbar" role="tablist" aria-label="Secciones de resultados" id="tabs">
+    <button role="tab" class="tabbtn" data-t="resumen" aria-selected="true">Resumen</button>
+    <button role="tab" class="tabbtn" data-t="opiniones" aria-selected="false">Opiniones</button>
+    <button role="tab" class="tabbtn" data-t="detalle" aria-selected="false">Uso y pago</button>
+    <button role="tab" class="tabbtn" data-t="perfil" aria-selected="false">Perfiles</button>
+    <button role="tab" class="tabbtn" data-t="ajustes" aria-selected="false">Datos</button>
+  </nav>
+
+  <div class="card" id="empty" hidden>
+    <p><b>Aún no hay suficientes respuestas para calcular el NPS.</b></p>
+    <p class="muted" id="empty-help">Cuando las personas respondan la encuesta, aquí verás los resultados.</p>
+  </div>
+
+  <!-- RESUMEN -->
+  <section class="tabpane" id="p-resumen">
+    <div id="warnings" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="card">
+      <div class="hero-top">
+        <div><span class="eyebrow">NPS</span><b id="nps">0</b></div>
+        <span class="muted" id="total"></span>
+      </div>
+      <div aria-hidden="true">
+        <div class="gauge-track"><span class="gauge-zero"></span><span class="gauge-mark" id="mark"></span></div>
+        <div class="gauge-scale"><span>−100</span><span>0</span><span>+100</span></div>
+      </div>
+      <div class="band" id="band"><b id="band-title"></b><span id="band-text"></span></div>
+      <p class="muted small">Estos rangos son una guía interna y orientativa para validar el prototipo, no un estándar universal. Un NPS alto no prueba por sí solo que Coclia funcione bien técnicamente ni que vaya a tener éxito comercial.</p>
+    </div>
+    <div class="cats">
+      <div class="cat pro"><span>Promotores · 9–10</span><b id="pro">0</b><em id="pro-pct">0 %</em></div>
+      <div class="cat pas"><span>Pasivos · 7–8</span><b id="pas">0</b><em id="pas-pct">0 %</em></div>
+      <div class="cat det"><span>Detractores · 0–6</span><b id="det">0</b><em id="det-pct">0 %</em></div>
+    </div>
+    <div class="card"><h3>Distribución de puntuaciones</h3><div class="dist" id="dist" role="img" aria-label=""></div></div>
+    <div class="card"><h3>Lo más importante</h3><div class="kpis" id="summary"></div></div>
+    <div class="card"><h3>Evolución por ronda</h3><div id="trend"></div></div>
+    <details class="card guide">
+      <summary>¿Cómo leer estos resultados?</summary>
+      <ol>
+        <li><b>Mira primero quién respondió.</b> Con pocas personas, o si la mayoría son amigos y familia, los números se ven mejor de lo que son.</li>
+        <li><b>Luego el NPS y su rango.</b> Menor que 0: alerta. De 0 a 29: aceptación inicial. De 30 a 50: buena señal. Más de 50: señal positiva que debes contrastar con la muestra.</li>
+        <li><b>Revisa si completaron la tarea.</b> Si muchos necesitaron ayuda, hay problemas de uso aunque el NPS sea alto.</li>
+        <li><b>Lee las opiniones,</b> empezando por los detractores. Ahí están las mejoras concretas.</li>
+        <li><b>Compara por perfil.</b> Pesa más la opinión de quienes sí tienen dificultades de comunicación.</li>
+        <li><b>El pago con cuidado:</b> la mediana dice el valor típico mejor que el promedio, y decir "sí pagaría" no es una compra.</li>
+        <li><b>Compara rondas</b> después de cada mejora del prototipo.</li>
+      </ol>
+    </details>
+  </section>
+
+  <!-- OPINIONES -->
+  <section class="tabpane" id="p-opiniones" hidden>
+    <div class="card">
+      <div class="seg-pick" role="group" aria-label="Qué opiniones ver" id="op-kind"></div>
+      <div class="seg-pick" role="group" aria-label="Filtrar por tipo de persona" id="op-cat"></div>
+      <div class="field"><label for="op-q" class="sr-only">Buscar en las opiniones</label><input class="txt" id="op-q" placeholder="Buscar una palabra o un nombre" autocomplete="off" style="font-size:16px"></div>
+      <div id="op-themes"></div>
+    </div>
+    <p class="muted small" id="op-count"></p>
+    <div id="op-list" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <!-- USO Y PAGO -->
+  <section class="tabpane" id="p-detalle" hidden>
+    <div class="card"><h3>¿Completaron la tarea?</h3><div id="task"></div></div>
+    <div class="card">
+      <h3>¿Pagarían por Coclia?</h3>
+      <div id="pay"></div>
+      <div class="kpis" id="cop-kpis"></div>
+      <h3 style="font-size:16px">Valores mensuales propuestos (COP)</h3>
+      <div id="cop-dist"></div>
+      <p class="muted small">Decir que pagaría no es una compra real. Úsalo como una pista, no como una venta.</p>
+    </div>
+  </section>
+
+  <!-- PERFILES -->
+  <section class="tabpane" id="p-perfil" hidden>
+    <div class="card"><h3>¿De dónde viene la muestra?</h3><div id="source"></div></div>
+    <div class="card">
+      <h3>Resultados por perfil</h3>
+      <div class="seg-pick" role="group" aria-label="Segmentar por" id="seg-pick"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Grupo</th><th class="n">Resp.</th><th class="n">NPS</th><th class="n">Sin ayuda</th><th class="n">Pagaría</th></tr></thead><tbody id="seg-body"></tbody></table></div>
+      <p class="muted small">* Con menos de 5 respuestas en un grupo, el resultado no es confiable.</p>
+    </div>
+  </section>
+
+  <!-- DATOS -->
+  <section class="tabpane" id="p-ajustes" hidden>
+    <div class="card" id="sheet-card">
+      <h3>Respuestas de todos los celulares (Google Sheets)</h3>
+      <p class="muted small" id="sheet-state">No conectado.</p>
+      <div class="field"><label for="sheet-url">Dirección de la aplicación web</label><input class="txt" id="sheet-url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" style="font-size:15px"></div>
+      <div class="field"><label for="sheet-key">Clave</label><input class="txt" id="sheet-key" type="password" autocomplete="off" style="font-size:15px"></div>
+      <div class="row"><button class="btn primary" id="sheet-save">Conectar</button><button class="btn" id="sheet-off" hidden>Desconectar</button></div>
+      <p class="err" id="sheet-err" role="alert" hidden></p>
+    </div>
+
+    <div class="card">
+      <h3>Ronda de evaluación</h3>
+      <p class="muted small">Ronda activa: <b id="round-now">Ronda 1</b>. Cada persona responde una vez por ronda. Abre una ronda nueva cada vez que mejores el prototipo.</p>
+      <button class="btn" id="new-round">Abrir nueva ronda</button>
+      <div class="row" id="round-confirm" hidden>
+        <span style="flex-basis:100%;font-weight:700">¿Abrir <span id="round-next"></span>? Las respuestas anteriores se conservan.</span>
+        <button class="btn" id="round-no">Cancelar</button>
+        <button class="btn violet" id="round-yes">Sí, abrir</button>
+      </div>
+      <p class="ok-msg" id="round-ok" role="status" hidden></p>
+    </div>
+
+    <div class="card">
+      <h3>Encuestar en este celular</h3>
+      <label class="switch" for="kiosk"><span><b>Modo encuestador</b><br><span class="muted small">Actívalo si le vas a pasar este celular a varias personas. Después de cada respuesta aparece "Siguiente persona".</span></span><input type="checkbox" id="kiosk"></label>
+    </div>
+
+    <div class="card">
+      <h3>Agregar respuestas de otro celular</h3>
+      <p class="muted small">Si alguien respondió en su propio celular y te envió sus respuestas por WhatsApp, pégalas aquí. Las repetidas no se cuentan dos veces.</p>
+      <textarea id="paste" rows="5" class="csv-box" placeholder="id,fecha,ronda,codigo,nps,…"></textarea>
+      <button class="btn" id="add">Agregar</button>
+      <p class="ok-msg" id="add-ok" role="status" hidden></p>
+      <p class="err" id="add-err" role="alert" hidden></p>
+    </div>
+
+    <div class="card">
+      <h3>Exportar y borrar</h3>
+      <button class="btn" id="export">Copiar todas las respuestas (para Excel)</button>
+      <textarea class="csv-box" id="export-box" readonly hidden aria-label="Respuestas en formato CSV"></textarea>
+      <p class="ok-msg" id="export-ok" role="status" hidden></p>
+      <button class="btn danger" id="clear">Borrar respuestas guardadas en este celular</button>
+      <div class="row" id="clear-confirm" hidden>
+        <span style="flex-basis:100%;font-weight:700">¿Borrar las respuestas de este celular y las pegadas? Las de Google Sheets no se tocan: esas se borran en la hoja.</span>
+        <button class="btn" id="clear-no">Cancelar</button>
+        <button class="btn danger-solid" id="clear-yes">Sí, borrar</button>
+      </div>
+      <p class="ok-msg" id="clear-ok" role="status" hidden></p>
+    </div>
+  </section>
+
   </section>
 </div>
 
@@ -508,7 +695,11 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
   });
   $('prev').addEventListener('click', function(){ collect(step); if (step > 1) goStep(step - 1); });
 
-  function show(v){ ['start', 'form', 'done'].forEach(function(n){ $('v-' + n).hidden = n !== v; }); window.scrollTo(0, 0); }
+  function show(v){
+    ['start', 'form', 'done', 'lock', 'results'].forEach(function(n){ $('v-' + n).hidden = n !== v; });
+    $('open-results').hidden = v === 'lock' || v === 'results';
+    window.scrollTo(0, 0);
+  }
   function reset(){
     ans = blank(); sending = false;
     Array.prototype.forEach.call(scale.children, function(b, i){ b.setAttribute('aria-checked', 'false'); b.tabIndex = i === 0 ? 0 : -1; });
@@ -613,14 +804,489 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     var r = store().responses, csv = toCsv(Object.keys(r).map(function(k){ return r[k]; })), box = $('team-box'), ok = $('team-ok');
     box.value = csv;
     function fallback(){ box.hidden = false; box.focus(); box.select(); ok.textContent = 'Selecciona el texto y cópialo.'; ok.hidden = false; }
-    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiadas. Ahora abre Resultados › Datos › Agregar respuestas copiadas, y pégalas.'; ok.hidden = false; }, fallback); } catch(e){ fallback(); }
+    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiadas. En el celular principal abre Resultados › Datos y pégalas.'; ok.hidden = false; }, fallback); } catch(e){ fallback(); }
   });
   $('next-person').addEventListener('click', renderTeam);
   renderTeam();
+
+  /* ---------- PIN del equipo para ver los resultados ---------- */
+  var PIN = 'coclia-pin', UNLOCK = 'coclia-resultados-abierto';
+  function sha(text){
+    if (window.crypto && crypto.subtle && window.TextEncoder)
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function(b){ return Array.prototype.map.call(new Uint8Array(b), function(x){ return x.toString(16).padStart(2, '0'); }).join(''); });
+    var h = 5381; for (var i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+    return Promise.resolve('d' + (h >>> 0).toString(16));
+  }
+  function unlocked(){ try { return sessionStorage.getItem(UNLOCK) === '1'; } catch(e){ return false; } }
+  function openResults(){ show('results'); if (window.__cocliaResults) window.__cocliaResults.open(); }
+  function openLock(){
+    if (unlocked()) return openResults();
+    var has = !!read(PIN, null);
+    $('pin-help').textContent = has ? 'Solo el equipo puede ver los resultados.' : 'Crea un PIN de 4 a 6 números. Lo pedirá cada vez que alguien quiera ver los resultados en este celular.';
+    $('pin1-label').textContent = has ? 'PIN' : 'Nuevo PIN';
+    $('pin2-wrap').hidden = has; $('pin-go').textContent = has ? 'Entrar' : 'Crear PIN y entrar';
+    $('pin-forgot').hidden = !has; $('pin-reset').hidden = true;
+    $('pin1').value = ''; $('pin2').value = ''; $('pin-err').hidden = true;
+    show('lock');
+  }
+  $('open-results').addEventListener('click', openLock);
+  $('lock-back').addEventListener('click', function(){ show('start'); });
+  $('results-back').addEventListener('click', function(){ show('start'); });
+  $('results-lock').addEventListener('click', function(){ try { sessionStorage.removeItem(UNLOCK); } catch(e){} show('start'); });
+  $('pin-forgot').addEventListener('click', function(){ this.hidden = true; $('pin-reset').hidden = false; });
+  $('pin-reset-no').addEventListener('click', function(){ $('pin-reset').hidden = true; $('pin-forgot').hidden = false; });
+  $('pin-reset-yes').addEventListener('click', function(){ try { localStorage.removeItem(PIN); } catch(e){} openLock(); });
+  $('f-pin').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var p = read(PIN, null), a = $('pin1').value.trim(), b = $('pin2').value.trim();
+    function fail(m){ $('pin-err').textContent = m; $('pin-err').hidden = false; }
+    if (!/^\d{4,6}$/.test(a)) return fail('El PIN debe tener de 4 a 6 números.');
+    function enter(){ try { sessionStorage.setItem(UNLOCK, '1'); } catch(e){} openResults(); }
+    if (!p){
+      if (a !== b) return fail('Los PIN no coinciden.');
+      var salt = rand(10);
+      sha(salt + '|' + a).then(function(h){ if (!write(PIN, { salt: salt, hash: h })) return fail('No se pudo guardar el PIN en este navegador.'); enter(); });
+    } else sha(p.salt + '|' + a).then(function(h){ if (h !== p.hash) return fail('PIN incorrecto.'); enter(); });
+  });
+  // Los resultados pueden prender o apagar el modo encuestador
+  window.__cocliaSetKiosk = function(on){ kiosk = !!on || location.hash === '#encuestador'; $('mode-tag').hidden = !kiosk; $('team').hidden = !kiosk; renderTeam(); };
 
   var art = document.querySelector('#v-start .mascot svg');
   if (art) $('done-mascot').insertBefore(art.cloneNode(true), $('done-mascot').firstChild);
   ans = blank();
   checkAnswered();
+})();
+</script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var LOCAL = 'coclia-encuesta-v3', LEGACY = 'coclia-encuesta-v2', PASTED = 'coclia-resultados-pegadas', CONN = 'coclia-resultados-conexion', ROUND = 'coclia-ronda', KIOSK = 'coclia-encuestador', GOAL = 25;
+  function read(k, def){ try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch(e){ return def; } }
+  function write(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+
+  /* ================= Reglas ================= */
+  function classify(s){ return s <= 6 ? 'detractor' : s <= 8 ? 'pasivo' : 'promotor'; }
+  function computeNps(list){
+    var n = list.length; if (!n) return null;
+    var p = 0, pa = 0, d = 0;
+    list.forEach(function(r){ var c = classify(r.score); if (c === 'promotor') p++; else if (c === 'pasivo') pa++; else d++; });
+    var pp = p / n * 100, pap = pa / n * 100, dp = d / n * 100;
+    return { n: n, promotores: p, pasivos: pa, detractores: d, pctP: pp, pctPa: pap, pctD: dp, nps: Math.round(pp - dp) };
+  }
+  function interpret(nps){
+    if (nps < 0)   return { key:'alerta',   title:'Señal de alerta', text:'Hay más detractores que promotores. Investiga los problemas importantes antes de seguir.' };
+    if (nps <= 29) return { key:'inicial',  title:'Aceptación inicial', text:'Hay interés, pero Coclia necesita mejoras. Revisa las opiniones de dificultades y lo que falta.' };
+    if (nps <= 50) return { key:'buena',    title:'Buena señal de aceptación', text:'La mayoría ve valor. Sigue mejorando y amplía la muestra.' };
+    return            { key:'positiva', title:'Señal positiva', text:'Muy buen resultado. Contrástalo con quién respondió: si son personas cercanas, puede estar inflado.' };
+  }
+  var CLOSE = ['familia', 'companeros'];
+  function biasInfo(list){
+    var known = list.filter(function(r){ return r.source; });
+    if (!known.length) return { known: 0, close: 0, pct: null, biased: false };
+    var close = known.filter(function(r){ return CLOSE.indexOf(r.source) >= 0; }).length, pct = close / known.length * 100;
+    return { known: known.length, close: close, pct: pct, biased: pct > 50 };
+  }
+  function median(xs){ if (!xs.length) return null; var s = xs.slice().sort(function(a, b){ return a - b; }), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+  /* ================= Datos: varias fuentes, sin repetidos ================= */
+  var ALLOWED = { task:['sin_ayuda','con_ayuda','no'], pay:['si','no','tal_vez'], hasDiff:['si','no'], source:['familia','companeros','externo','otros'],
+    age:['menos_18','18_24','25_34','35_44','45_54','55_64','65_mas'], occ:['estudiante','empleado','independiente','salud','otra'] };
+  // Convierte una respuesta (de la hoja, del celular o pegada) a un formato común
+  function normalize(o, origin){
+    if (!o) return null;
+    var g = function(k){ var v = o[k]; return v == null ? '' : String(v).trim(); };
+    var score = parseInt(g('nps') || g('puntuacion'), 10);
+    if (!(score >= 0 && score <= 10) || String(score) !== (g('nps') || g('puntuacion')).replace(/\.0+$/, '')) return null;
+    var at = Date.parse(g('fecha')); if (isNaN(at)) at = 0;
+    var round = (g('ronda') || 'Ronda 1').slice(0, 40); if (/^\d{4}-\d{2}$/.test(round)) round = 'Ronda 1';
+    var cop = g('cop_mes').replace(/\D/g, '');
+    var r = {
+      id: g('id'), name: g('nombre').replace(/^'/, '').slice(0, 40), code: /^P-[A-Z0-9]{6}$/i.test(g('codigo')) ? g('codigo').toUpperCase() : '', round: round, at: at, origin: origin,
+      score: score, why: (g('por_que') || g('comentario')).replace(/^'/, '').slice(0, 600), task: g('tarea'),
+      diff: g('dificultades').replace(/^'/, '').slice(0, 600), diffNone: g('sin_dificultades') === 'si',
+      need: g('le_falta').replace(/^'/, '').slice(0, 600), needNone: g('no_necesita_mejoras') === 'si',
+      pay: g('pagaria'), payCop: cop !== '' ? Math.min(10000000, parseInt(cop, 10)) : null,
+      age: g('edad'), occ: g('ocupacion'), hasDiff: g('tiene_dificultades'), source: g('procedencia')
+    };
+    Object.keys(ALLOWED).forEach(function(k){ if (ALLOWED[k].indexOf(r[k]) < 0) r[k] = ''; });
+    return r;
+  }
+  function keyOf(r){ return r.code ? r.code + '__' + r.round : (r.id || ('x__' + r.round + '__' + r.at + '__' + r.score + '__' + r.why.slice(0, 60))); }
+  function merge(lists){
+    var map = {};
+    lists.forEach(function(list){ list.forEach(function(r){ if (!r) return; var k = keyOf(r); if (!map[k] || (map[k].origin !== 'hoja' && r.origin === 'hoja')) map[k] = r; }); });
+    return Object.keys(map).map(function(k){ return map[k]; });
+  }
+  function rowsToObjects(rows){
+    if (!rows || !rows.length) return [];
+    var head = rows[0].map(function(h){ return String(h).trim().toLowerCase(); });
+    return rows.slice(1).filter(function(r){ return r.some(function(c){ return String(c).trim() !== ''; }); }).map(function(r){
+      var o = {}; head.forEach(function(h, i){ o[h] = r[i]; }); return o;
+    });
+  }
+  function parseCsv(text){
+    text = String(text || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
+    if (!text) return [];
+    var first = text.split('\n')[0], delim = first.indexOf('\t') >= 0 ? '\t' : (first.split(';').length > first.split(',').length ? ';' : ',');
+    var rows = [], row = [], cell = '', q = false;
+    for (var i = 0; i < text.length; i++){
+      var ch = text[i];
+      if (q){ if (ch === '"'){ if (text[i + 1] === '"'){ cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"' && cell === '') q = true;
+      else if (ch === delim){ row.push(cell); cell = ''; }
+      else if (ch === '\n'){ row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    row.push(cell); rows.push(row);
+    var head = rows[0].map(function(h){ return h.trim().toLowerCase(); }).join();
+    return [rows[0]].concat(rows.slice(1).filter(function(r){ return r.map(function(c){ return c.trim().toLowerCase(); }).join() !== head; }));
+  }
+
+  var sheetRows = [], sheetRound = null, sheetStatus = '';
+  function localList(){
+    var s = read(LOCAL, null), out = [];
+    if (s && s.responses) Object.keys(s.responses).forEach(function(k){ out.push(normalize(s.responses[k], 'celular')); });
+    var old = read(LEGACY, null); // encuesta anterior en este mismo sitio
+    if (old && old.responses) Object.keys(old.responses).forEach(function(k){
+      var x = old.responses[k];
+      out.push(normalize({ id: 'v2-' + k, codigo: x.code, ronda: x.round, fecha: x.at ? new Date(x.at).toISOString() : '', nps: x.score, por_que: x.why, tarea: x.task, dificultades: x.diff, sin_dificultades: x.diffNone ? 'si' : '', le_falta: x.need, no_necesita_mejoras: x.needNone ? 'si' : '', pagaria: x.pay, cop_mes: x.payCop == null ? '' : x.payCop, edad: x.age, ocupacion: x.occ, tiene_dificultades: x.hasDiff, procedencia: x.source }, 'celular'));
+    });
+    return out;
+  }
+  function pastedList(){ return read(PASTED, []).map(function(o){ return normalize(o, 'pegada'); }); }
+  function sheetList(){ return rowsToObjects(sheetRows).map(function(o){ return normalize(o, 'hoja'); }); }
+  function all(){ return merge([sheetList(), localList(), pastedList()]).filter(Boolean); }
+  function currentRound(){ return sheetRound || read(ROUND, 'Ronda 1') || 'Ronda 1'; }
+
+  /* ================= Google Sheets ================= */
+  function conn(){ return read(CONN, null); }
+  function validUrl(u){ return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u); }
+  function loadSheet(){
+    var c = conn();
+    if (!c){ sheetRows = []; sheetRound = null; sheetStatus = ''; return Promise.resolve(); }
+    sheetStatus = 'cargando';
+    return fetch(c.url + '?clave=' + encodeURIComponent(c.key)).then(function(r){ return r.json(); }).then(function(d){
+      if (!d || !d.ok){ sheetStatus = d && d.error === 'clave' ? 'clave' : 'error'; return; }
+      sheetRows = d.filas || []; sheetRound = d.ronda || null; sheetStatus = 'ok';
+      if (sheetRound) write(ROUND, sheetRound);
+    }).catch(function(){ sheetStatus = 'red'; });
+  }
+
+  /* ================= Utilidades ================= */
+  function signed(n){ return n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0'; }
+  function pct(x){ return Math.round(x) + ' %'; }
+  function cop(n){ return '$' + Math.round(n).toLocaleString('es-CO'); }
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function hbar(label, count, total, color){
+    var row = el('div', 'hbar'), t = el('div', 't'), f = el('div', 'f');
+    f.style.width = (total ? count / total * 100 : 0) + '%'; if (color) f.style.background = color;
+    t.appendChild(f); row.appendChild(el('span', '', label)); row.appendChild(t);
+    var b = el('b', '', total ? pct(count / total * 100) + ' · ' + count : '0'); b.style.whiteSpace = 'nowrap'; row.appendChild(b);
+    return row;
+  }
+  function msg(id, text){ var e = $(id); e.textContent = text || ''; e.hidden = !text; }
+  function kpi(box, v, l){ var d = el('div', 'kpi'); d.appendChild(el('b', '', v)); d.appendChild(el('span', '', l)); box.appendChild(d); }
+  function when(ms){ if (!ms) return ''; try { return new Date(ms).toLocaleDateString('es-CO', { day:'numeric', month:'short' }); } catch(e){ return ''; } }
+
+  var LABEL = { promotor:'Promotor', pasivo:'Pasivo', detractor:'Detractor' };
+  var CLS = { promotor:'c-pro', pasivo:'c-pas', detractor:'c-det' };
+  var NAMES = {
+    task: { sin_ayuda:'Sí, sin ayuda', con_ayuda:'Sí, con ayuda', no:'No la completaron' },
+    pay: { si:'Sí pagaría', tal_vez:'Tal vez', no:'No pagaría' },
+    age: { menos_18:'Menos de 18', '18_24':'18 a 24', '25_34':'25 a 34', '35_44':'35 a 44', '45_54':'45 a 54', '55_64':'55 a 64', '65_mas':'65 o más' },
+    occ: { estudiante:'Estudiante', empleado:'Empleado', independiente:'Independiente', salud:'Profesional de salud', otra:'Otra' },
+    hasDiff: { si:'Con dificultades de comunicación', no:'Sin dificultades de comunicación' },
+    source: { familia:'Amigos o familiares', companeros:'Compañeros de estudio o trabajo', externo:'Fuera del círculo cercano', otros:'Otros' }
+  };
+
+  /* ================= Pestañas ================= */
+  var tab = 'resumen';
+  function setTab(t){
+    tab = t;
+    Array.prototype.forEach.call($('tabs').children, function(b){ var on = b.dataset.t === t; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    ['resumen','opiniones','detalle','perfil','ajustes'].forEach(function(n){ $('p-' + n).hidden = true; });
+    render();
+  }
+  Array.prototype.forEach.call($('tabs').children, function(b){ b.addEventListener('click', function(){ setTab(b.dataset.t); }); });
+
+  /* ================= Pintar ================= */
+  var roundView = 'todas', segBy = 'hasDiff', opKind = 'why', opCat = 'todos', opQuery = '';
+  function render(){
+    var everything = all(), c = conn();
+    // Fuente de los datos
+    var nSheet = everything.filter(function(r){ return r.origin === 'hoja'; }).length;
+    var parts = [];
+    if (c) parts.push(sheetStatus === 'ok' ? 'Google Sheets conectado (' + nSheet + ')' : sheetStatus === 'cargando' ? 'Cargando Google Sheets…' : sheetStatus === 'clave' ? 'Google Sheets: la clave no es correcta' : 'Google Sheets: no se pudo conectar');
+    var nLocal = everything.filter(function(r){ return r.origin === 'celular'; }).length, nPaste = everything.filter(function(r){ return r.origin === 'pegada'; }).length;
+    if (nLocal) parts.push(nLocal + ' de este celular');
+    if (nPaste) parts.push(nPaste + ' pegadas');
+    $('src-line').textContent = parts.length ? parts.join(' · ') : 'Sin respuestas todavía. Para recibir las de todos los celulares, conecta Google Sheets en la pestaña Datos.';
+
+    // Rondas
+    var rs = [], first = {};
+    everything.forEach(function(r){ if (!(r.round in first) || r.at < first[r.round]) first[r.round] = r.at || 0; });
+    rs = Object.keys(first).sort(function(a, b){ return first[a] - first[b] || a.localeCompare(b, 'es', { numeric: true }); });
+    var rf = $('round-filter'); rf.innerHTML = '';
+    var o0 = el('option', '', 'Todas las rondas'); o0.value = 'todas'; rf.appendChild(o0);
+    rs.forEach(function(r){ var o = el('option', '', r + (r === currentRound() ? ' (activa)' : '')); o.value = r; rf.appendChild(o); });
+    if (roundView !== 'todas' && rs.indexOf(roundView) < 0) roundView = 'todas';
+    rf.value = roundView;
+
+    var list = everything.filter(function(r){ return roundView === 'todas' || r.round === roundView; });
+    var n = list.length;
+    $('goal-text').textContent = n + ' de ' + GOAL + ' respuestas';
+    $('goal-pct').textContent = pct(Math.min(100, n / GOAL * 100));
+    $('goal-fill').style.width = Math.min(100, n / GOAL * 100) + '%';
+
+    if (tab === 'ajustes'){ $('empty').hidden = true; $('p-ajustes').hidden = false; renderSettings(); return; }
+    var r = computeNps(list);
+    $('empty').hidden = !!r;
+    $('p-' + tab).hidden = !r;
+    if (!r) return;
+    if (tab === 'resumen') renderSummary(list, r, everything, rs);
+    if (tab === 'opiniones') renderOpinions(list);
+    if (tab === 'detalle') renderDetail(list);
+    if (tab === 'perfil') renderProfile(list);
+  }
+
+  function renderSummary(list, r, everything, rs){
+    var w = $('warnings'); w.innerHTML = '';
+    function warn(title, text){ var p = el('p', 'warn'); var b = el('b', '', title + ' '); p.appendChild(b); p.appendChild(document.createTextNode(text)); w.appendChild(p); }
+    if (r.n < GOAL) warn('Faltan respuestas:', 'llevas ' + r.n + ' de ' + GOAL + '. Los porcentajes pueden cambiar mucho con cada persona nueva.');
+    var b = biasInfo(list);
+    if (b.biased) warn('Posible sesgo:', 'el ' + pct(b.pct) + ' de quienes dijeron de dónde vienen son amigos, familia o compañeros. Busca usuarios fuera de tu círculo cercano.');
+    $('nps').textContent = signed(r.nps);
+    $('nps').style.color = r.nps > 0 ? 'var(--good)' : r.nps < 0 ? 'var(--warn)' : 'var(--fg)';
+    $('total').textContent = r.n + (r.n === 1 ? ' respuesta' : ' respuestas');
+    $('mark').style.left = ((r.nps + 100) / 2) + '%';
+    var it = interpret(r.nps);
+    $('band').className = 'band ' + it.key; $('band-title').textContent = it.title; $('band-text').textContent = it.text;
+    $('pro').textContent = r.promotores; $('pro-pct').textContent = pct(r.pctP);
+    $('pas').textContent = r.pasivos;    $('pas-pct').textContent = pct(r.pctPa);
+    $('det').textContent = r.detractores; $('det-pct').textContent = pct(r.pctD);
+    var counts = []; for (var i = 0; i <= 10; i++) counts[i] = 0;
+    list.forEach(function(x){ counts[x.score]++; });
+    var max = Math.max.apply(null, counts) || 1, dist = $('dist'); dist.innerHTML = '';
+    counts.forEach(function(cn, i){
+      var col = el('div', 'dcol'); col.appendChild(el('i', '', cn));
+      var bar = el('div', 'dbar ' + CLS[classify(i)]); bar.style.height = (cn / max * 120) + 'px'; col.appendChild(bar);
+      col.appendChild(el('span', '', i)); dist.appendChild(col);
+    });
+    dist.setAttribute('aria-label', 'Respuestas por puntuación: ' + counts.map(function(cn, i){ return i + ': ' + cn; }).join(', '));
+    var wt = list.filter(function(x){ return x.task; }), wp = list.filter(function(x){ return x.pay; });
+    var vals = list.filter(function(x){ return typeof x.payCop === 'number'; }).map(function(x){ return x.payCop; });
+    var sm = $('summary'); sm.innerHTML = '';
+    kpi(sm, wt.length ? pct(wt.filter(function(x){ return x.task === 'sin_ayuda'; }).length / wt.length * 100) : '–', 'completó la tarea sin ayuda');
+    kpi(sm, wp.length ? pct(wp.filter(function(x){ return x.pay === 'si'; }).length / wp.length * 100) : '–', 'pagaría');
+    kpi(sm, vals.length ? cop(median(vals)) : '–', 'valor típico al mes');
+    kpi(sm, b.known ? pct(b.pct) : '–', 'del círculo cercano');
+    var trend = $('trend'); trend.innerHTML = '';
+    if (rs.length < 2) trend.appendChild(el('p', 'muted', 'Aparecerá cuando haya respuestas de al menos dos rondas.'));
+    else {
+      var wrap = el('div', 'tbl-wrap'), tbl = el('table'), th = el('thead'), hr = el('tr');
+      ['Ronda','Resp.','NPS','Sin ayuda','Pagaría'].forEach(function(h, i){ hr.appendChild(el('th', i ? 'n' : '', h)); });
+      th.appendChild(hr); tbl.appendChild(th);
+      var bd = el('tbody');
+      rs.forEach(function(rn){
+        var rows = everything.filter(function(x){ return x.round === rn; }), m = computeNps(rows), tr = el('tr');
+        var t3 = rows.filter(function(x){ return x.task; }), p3 = rows.filter(function(x){ return x.pay; });
+        tr.appendChild(el('td', '', rn)); tr.appendChild(el('td', 'n', rows.length)); tr.appendChild(el('td', 'n', signed(m.nps)));
+        tr.appendChild(el('td', 'n', t3.length ? pct(t3.filter(function(x){ return x.task === 'sin_ayuda'; }).length / t3.length * 100) : '–'));
+        tr.appendChild(el('td', 'n', p3.length ? pct(p3.filter(function(x){ return x.pay === 'si'; }).length / p3.length * 100) : '–'));
+        bd.appendChild(tr);
+      });
+      tbl.appendChild(bd); wrap.appendChild(tbl); trend.appendChild(wrap);
+    }
+  }
+
+  /* ---- Opiniones ---- */
+  var STOP = ' a al algo algunas algunos ante antes como con contra cual cuando de del desde donde durante e el ella ellas ellos en entre era es esa esas ese eso esos esta estaba estas este esto estos fue fueron ha hay la las le les lo los mas me mi mis mucho muy nada ni no nos o otra otro para pero poco por porque que se ser si sin sobre solo son su sus tambien tan te tiene tienen todo todos tu un una uno unos y ya yo bien bueno buena me gusto hace puede app aplicacion coclia cocllia '.split(' ');
+  function themes(texts){
+    var count = {};
+    texts.forEach(function(t){
+      var seen = {};
+      t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ ]+/g, ' ').split(/\s+/).forEach(function(w){
+        if (w.length < 4 || STOP.indexOf(w) >= 0 || seen[w]) return; seen[w] = true; count[w] = (count[w] || 0) + 1;
+      });
+    });
+    return Object.keys(count).filter(function(w){ return count[w] >= 2; }).sort(function(a, b){ return count[b] - count[a]; }).slice(0, 8).map(function(w){ return [w, count[w]]; });
+  }
+  function fold(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function renderOpinions(list){
+    var kinds = [['why','¿Por qué esa nota?'],['diff','Dificultades'],['need','Lo que le falta']];
+    var kb = $('op-kind');
+    if (!kb.children.length) kinds.forEach(function(k){ var b = el('button', 'filter', k[1]); b.type = 'button'; b.dataset.k = k[0]; b.addEventListener('click', function(){ opKind = k[0]; render(); }); kb.appendChild(b); });
+    Array.prototype.forEach.call(kb.children, function(b){ b.setAttribute('aria-pressed', b.dataset.k === opKind ? 'true' : 'false'); });
+    var cb = $('op-cat');
+    if (!cb.children.length) [['todos','Todos'],['detractor','Detractores'],['pasivo','Pasivos'],['promotor','Promotores']].forEach(function(f){ var b = el('button', 'filter', f[1]); b.type = 'button'; b.dataset.f = f[0]; b.addEventListener('click', function(){ opCat = f[0]; render(); }); cb.appendChild(b); });
+    Array.prototype.forEach.call(cb.children, function(b){ b.setAttribute('aria-pressed', b.dataset.f === opCat ? 'true' : 'false'); });
+    var base = list.filter(function(x){ return x[opKind] && (opCat === 'todos' || classify(x.score) === opCat); });
+    var items = base.filter(function(x){ return !opQuery || fold(x[opKind] + ' ' + (x.name || '')).indexOf(fold(opQuery)) >= 0; })
+      .sort(function(a, b){ return a.score - b.score || (b.at - a.at); });
+    // Temas que se repiten
+    var th = $('op-themes'); th.innerHTML = '';
+    var tm = themes(base.map(function(x){ return x[opKind]; }));
+    if (tm.length){
+      th.appendChild(el('p', 'muted small', 'Palabras que más se repiten (toca una para filtrar):'));
+      var row = el('div', 'seg-pick');
+      tm.forEach(function(t){ var b = el('button', 'filter', t[0] + ' · ' + t[1]); b.type = 'button'; b.setAttribute('aria-pressed', fold(opQuery) === t[0] ? 'true' : 'false');
+        b.addEventListener('click', function(){ opQuery = fold(opQuery) === t[0] ? '' : t[0]; $('op-q').value = opQuery; render(); }); row.appendChild(b); });
+      th.appendChild(row);
+    }
+    var none = opKind === 'diff' ? list.filter(function(x){ return x.diffNone; }).length : opKind === 'need' ? list.filter(function(x){ return x.needNone; }).length : 0;
+    $('op-count').textContent = items.length + (items.length === 1 ? ' opinión' : ' opiniones') + (opQuery ? ' con "' + opQuery + '"' : '') +
+      (opKind === 'diff' ? ' · ' + none + ' dijeron que no tuvieron dificultades' : opKind === 'need' ? ' · ' + none + ' dijeron que no necesita mejoras' : '') + '. Primero las de nota más baja.';
+    var box = $('op-list'); box.innerHTML = '';
+    if (!items.length){ box.appendChild(el('p', 'muted', 'No hay opiniones con este filtro.')); return; }
+    items.forEach(function(x){
+      var cl = classify(x.score), card = el('div', 'card comment');
+      var head = el('div', 'comment-head');
+      if (x.name) head.appendChild(el('b', 'op-name', x.name));
+      head.appendChild(el('span', 'chip-score ' + CLS[cl], x.score)); head.appendChild(el('span', '', LABEL[cl]));
+      if (x.task) head.appendChild(el('span', '', '· ' + NAMES.task[x.task]));
+      if (x.at) head.appendChild(el('span', '', '· ' + when(x.at)));
+      head.appendChild(el('span', '', '· ' + x.round));
+      card.appendChild(head); card.appendChild(el('p', 'op-text', x[opKind]));
+      var extra = [];
+      if (opKind !== 'why' && x.why) extra.push('Por qué: ' + x.why);
+      if (x.hasDiff === 'si') extra.push('Tiene dificultades de comunicación');
+      if (x.source) extra.push(NAMES.source[x.source]);
+      if (extra.length) card.appendChild(el('p', 'muted small', extra.join(' · ')));
+      box.appendChild(card);
+    });
+  }
+  $('op-q').addEventListener('input', function(){ opQuery = this.value.trim(); render(); });
+
+  function renderDetail(list){
+    var wt = list.filter(function(x){ return x.task; }), task = $('task'); task.innerHTML = '';
+    if (!wt.length) task.appendChild(el('p', 'muted', 'Sin respuestas a esta pregunta.'));
+    else [['sin_ayuda','var(--good)'],['con_ayuda','var(--blue)'],['no','var(--warn)']].forEach(function(t){ task.appendChild(hbar(NAMES.task[t[0]], wt.filter(function(x){ return x.task === t[0]; }).length, wt.length, t[1])); });
+    var wp = list.filter(function(x){ return x.pay; }), pay = $('pay'); pay.innerHTML = '';
+    if (!wp.length) pay.appendChild(el('p', 'muted', 'Nadie respondió esta pregunta.'));
+    else [['si','var(--good)'],['tal_vez','var(--blue)'],['no','var(--warn)']].forEach(function(t){ pay.appendChild(hbar(NAMES.pay[t[0]], wp.filter(function(x){ return x.pay === t[0]; }).length, wp.length, t[1])); });
+    if (wp.length && wp.length < list.length) pay.appendChild(el('p', 'muted small', (list.length - wp.length) + ' no respondieron esta pregunta.'));
+    var vals = list.filter(function(x){ return typeof x.payCop === 'number'; }).map(function(x){ return x.payCop; });
+    var kp = $('cop-kpis'); kp.innerHTML = '';
+    if (vals.length){
+      kpi(kp, cop(median(vals)), 'valor típico (mediana)');
+      kpi(kp, cop(vals.reduce(function(a, x){ return a + x; }, 0) / vals.length), 'promedio');
+      kpi(kp, cop(Math.min.apply(null, vals)) + ' – ' + cop(Math.max.apply(null, vals)), 'rango');
+      kpi(kp, String(vals.length), vals.length === 1 ? 'persona dio un valor' : 'personas dieron un valor');
+    }
+    var cd = $('cop-dist'); cd.innerHTML = '';
+    if (!vals.length) cd.appendChild(el('p', 'muted', 'Nadie propuso un valor.'));
+    else [['$0', 0, 0], ['$1 a $5.000', 1, 5000], ['$5.001 a $10.000', 5001, 10000], ['$10.001 a $20.000', 10001, 20000], ['$20.001 a $50.000', 20001, 50000], ['Más de $50.000', 50001, Infinity]]
+      .forEach(function(bk){ cd.appendChild(hbar(bk[0], vals.filter(function(v){ return v >= bk[1] && v <= bk[2]; }).length, vals.length, 'var(--violet)')); });
+  }
+
+  function renderProfile(list){
+    var b = biasInfo(list), src = $('source'); src.innerHTML = '';
+    if (!b.known) src.appendChild(el('p', 'muted', 'Nadie indicó de dónde viene.'));
+    else {
+      src.appendChild(el('p', '', 'Del círculo cercano: ' + pct(b.pct) + ' (' + b.close + ' de ' + b.known + ').'));
+      ['familia','companeros','externo','otros'].forEach(function(k){ src.appendChild(hbar(NAMES.source[k], list.filter(function(x){ return x.source === k; }).length, b.known, CLOSE.indexOf(k) >= 0 ? 'var(--warn)' : 'var(--good)')); });
+      src.appendChild(el('p', 'muted small', b.biased ? 'Más de la mitad es del círculo cercano: la muestra puede estar sesgada.' : 'La mayoría viene de fuera del círculo cercano.'));
+    }
+    var sp = $('seg-pick');
+    if (!sp.children.length) [['hasDiff','Dificultades'],['age','Edad'],['occ','Ocupación'],['source','Procedencia']].forEach(function(sg){
+      var bt = el('button', 'filter', sg[1]); bt.type = 'button'; bt.dataset.s = sg[0]; bt.addEventListener('click', function(){ segBy = sg[0]; render(); }); sp.appendChild(bt);
+    });
+    Array.prototype.forEach.call(sp.children, function(bt){ bt.setAttribute('aria-pressed', bt.dataset.s === segBy ? 'true' : 'false'); });
+    var tb = $('seg-body'); tb.innerHTML = '';
+    Object.keys(NAMES[segBy]).concat(['']).forEach(function(g){
+      var rows = list.filter(function(x){ return (x[segBy] || '') === g; });
+      if (!rows.length) return;
+      var m = computeNps(rows), few = rows.length < 5, tr = el('tr');
+      tr.appendChild(el('td', '', g ? NAMES[segBy][g] : 'No respondió'));
+      tr.appendChild(el('td', 'n', rows.length));
+      tr.appendChild(el('td', 'n' + (few ? ' few' : ''), signed(m.nps) + (few ? '*' : '')));
+      var t2 = rows.filter(function(x){ return x.task; }), p2 = rows.filter(function(x){ return x.pay; });
+      tr.appendChild(el('td', 'n' + (few ? ' few' : ''), t2.length ? pct(t2.filter(function(x){ return x.task === 'sin_ayuda'; }).length / t2.length * 100) : '–'));
+      tr.appendChild(el('td', 'n' + (few ? ' few' : ''), p2.length ? pct(p2.filter(function(x){ return x.pay === 'si'; }).length / p2.length * 100) : '–'));
+      tb.appendChild(tr);
+    });
+  }
+
+  /* ================= Datos y ajustes ================= */
+  function renderSettings(){
+    var c = conn();
+    $('sheet-url').value = c ? c.url : $('sheet-url').value;
+    $('sheet-off').hidden = !c;
+    $('sheet-save').textContent = c ? 'Guardar cambios' : 'Conectar';
+    $('sheet-state').textContent = !c ? 'No conectado. Las respuestas de otros celulares no llegarán solas.'
+      : sheetStatus === 'ok' ? 'Conectado. Se actualiza cada minuto.' : sheetStatus === 'clave' ? 'La clave no es correcta.' : sheetStatus === 'cargando' ? 'Conectando…' : 'No se pudo conectar. Revisa la dirección y tu internet.';
+    $('round-now').textContent = currentRound();
+    $('kiosk').checked = read(KIOSK, false) === true;
+  }
+  $('sheet-save').addEventListener('click', function(){
+    msg('sheet-err', '');
+    var url = $('sheet-url').value.trim(), key = $('sheet-key').value || (conn() || {}).key || '';
+    if (!validUrl(url)) return msg('sheet-err', 'La dirección debe verse así: https://script.google.com/macros/s/…/exec');
+    if (!key) return msg('sheet-err', 'Escribe la clave que pusiste en el código de Google.');
+    write(CONN, { url: url, key: key }); $('sheet-key').value = '';
+    sheetStatus = 'cargando'; render();
+    loadSheet().then(render);
+  });
+  $('sheet-off').addEventListener('click', function(){ try { localStorage.removeItem(CONN); } catch(e){} sheetRows = []; sheetRound = null; sheetStatus = ''; render(); });
+
+  function nextRound(){
+    var nums = all().map(function(r){ var m = /(\d+)$/.exec(r.round); return m ? +m[1] : 0; }).concat([+((/(\d+)$/.exec(currentRound()) || [0, 1])[1])]);
+    return 'Ronda ' + (Math.max.apply(null, nums) + 1);
+  }
+  $('new-round').addEventListener('click', function(){ $('round-next').textContent = nextRound(); $('round-confirm').hidden = false; this.hidden = true; msg('round-ok', ''); });
+  $('round-no').addEventListener('click', function(){ $('round-confirm').hidden = true; $('new-round').hidden = false; });
+  $('round-yes').addEventListener('click', function(){
+    var name = nextRound(), c = conn();
+    $('round-confirm').hidden = true; $('new-round').hidden = false;
+    write(ROUND, name);
+    if (!c){ msg('round-ok', 'Abriste ' + name + ' en este celular. Para que aplique en todos los celulares, conecta Google Sheets.'); render(); return; }
+    fetch(c.url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'ronda', clave: c.key, ronda: name }) })
+      .then(function(){ return loadSheet(); })
+      .then(function(){ msg('round-ok', sheetRound === name ? 'Listo: ' + name + ' está activa en todos los celulares.' : 'No se pudo confirmar el cambio. Revisa la clave e inténtalo de nuevo.'); render(); });
+  });
+  $('kiosk').addEventListener('change', function(){ write(KIOSK, this.checked); if (window.__cocliaSetKiosk) window.__cocliaSetKiosk(this.checked); });
+
+  $('add').addEventListener('click', function(){
+    msg('add-ok', ''); msg('add-err', '');
+    var rows = parseCsv($('paste').value);
+    if (rows.length < 2) return msg('add-err', 'Pega primero las respuestas copiadas (con la fila de títulos).');
+    var objs = rowsToObjects(rows), good = objs.filter(function(o){ return normalize(o, 'pegada'); });
+    if (!good.length) return msg('add-err', 'No reconozco este formato. Debe venir de "Copiar mis respuestas" o de "Copiar todas las respuestas".');
+    var before = all().length, saved = read(PASTED, []).concat(good);
+    write(PASTED, saved);
+    var added = all().length - before;
+    $('paste').value = '';
+    msg('add-ok', added + (added === 1 ? ' respuesta nueva' : ' respuestas nuevas') + (good.length - added > 0 ? ' · ' + (good.length - added) + ' ya estaban y no se contaron otra vez' : '') + (objs.length - good.length > 0 ? ' · ' + (objs.length - good.length) + ' inválidas ignoradas' : '') + '.');
+    render();
+  });
+  $('export').addEventListener('click', function(){
+    var head = ['id','fecha','ronda','codigo','nombre','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
+    var rows = [head];
+    all().sort(function(a, b){ return a.at - b.at; }).forEach(function(x){
+      rows.push([x.id, x.at ? new Date(x.at).toISOString().slice(0, 10) : '', x.round, x.code, x.name, x.score, classify(x.score), x.why, x.task, x.diff, x.diffNone ? 'si' : '', x.need, x.needNone ? 'si' : '', x.pay, x.payCop == null ? '' : x.payCop, x.age, x.occ, x.hasDiff, x.source]);
+    });
+    var csv = rows.map(function(r){ return r.map(function(v){ v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n;\t]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n');
+    var box = $('export-box'); box.value = csv;
+    function fallback(){ box.hidden = false; box.focus(); box.select(); msg('export-ok', 'Selecciona el texto y cópialo para pegarlo en Excel o Google Sheets.'); }
+    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; msg('export-ok', 'Copiadas ' + (rows.length - 1) + ' respuestas. Pégalas en Excel o Google Sheets.'); }, fallback); } catch(e){ fallback(); }
+  });
+  $('clear').addEventListener('click', function(){ $('clear-confirm').hidden = false; this.hidden = true; msg('clear-ok', ''); });
+  $('clear-no').addEventListener('click', function(){ $('clear-confirm').hidden = true; $('clear').hidden = false; });
+  $('clear-yes').addEventListener('click', function(){
+    [LOCAL, LEGACY, PASTED, 'coclia-respondio', 'coclia-encuesta-pendientes'].forEach(function(k){ try { localStorage.removeItem(k); } catch(e){} });
+    $('clear-confirm').hidden = true; $('clear').hidden = false;
+    msg('clear-ok', 'Se borraron las respuestas de este celular.'); render(); if (window.__cocliaSetKiosk) window.__cocliaSetKiosk(read(KIOSK, false) === true);
+  });
+
+  $('round-filter').addEventListener('change', function(){ roundView = this.value; render(); });
+  $('refresh').addEventListener('click', function(){ var b = this; b.textContent = 'Actualizando…'; loadSheet().then(function(){ b.textContent = 'Actualizar'; render(); }); });
+  // Si en otra pestaña de este celular llega una respuesta, se actualiza solo
+  window.addEventListener('storage', function(e){ if (e.key === LOCAL || e.key === PASTED) render(); });
+  setInterval(function(){ if (conn() && document.visibilityState === 'visible' && !$('v-results').hidden) loadSheet().then(render); }, 60000);
+
+  // Solo en Claude: allí no se puede conectar con Google Sheets
+  if ('' === 'claude') $('sheet-card').hidden = true;
+  window.__cocliaResults = { open: function(){ setTab(tab); loadSheet().then(render); } };
 })();
 </script>
