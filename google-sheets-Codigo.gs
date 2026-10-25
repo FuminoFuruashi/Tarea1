@@ -7,7 +7,7 @@ const CLAVE = 'CAMBIA-ESTA-CLAVE';
 
 const COLUMNAS = ['id', 'fecha', 'ronda', 'codigo', 'nps', 'categoria', 'por_que', 'tarea',
   'dificultades', 'sin_dificultades', 'le_falta', 'no_necesita_mejoras', 'pagaria', 'cop_mes',
-  'edad', 'ocupacion', 'tiene_dificultades', 'procedencia'];
+  'edad', 'ocupacion', 'tiene_dificultades', 'procedencia', 'nombre'];
 
 const PERMITIDOS = {
   tarea: ['sin_ayuda', 'con_ayuda', 'no'],
@@ -91,7 +91,8 @@ function doPost(e) {
       texto_(d.dificultades), d.sin_dificultades === 'si' ? 'si' : '',
       texto_(d.le_falta), d.no_necesita_mejoras === 'si' ? 'si' : '',
       elegir('pagaria'), cop,
-      elegir('edad'), elegir('ocupacion'), elegir('tiene_dificultades'), elegir('procedencia')
+      elegir('edad'), elegir('ocupacion'), elegir('tiene_dificultades'), elegir('procedencia'),
+      texto_(d.nombre, 40)
     ]);
     return salida_({ ok: true });
   } catch (err) {

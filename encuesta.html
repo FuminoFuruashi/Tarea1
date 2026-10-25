@@ -178,6 +178,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 .tabpane[hidden]{display:none}
 .guide summary{cursor:pointer;font-family:var(--font-display);font-size:18px;font-weight:600}
 .comment.card{padding:16px;gap:6px}
+.op-name{color:var(--fg);font-size:15px;font-weight:800}
 .op-text{font-size:17px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 </style>
@@ -216,9 +217,15 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       <h1 id="t-start">Encuesta de Coclia</h1>
       <ul class="facts">
         <li><b>7 preguntas</b>, unos 3 minutos.</li>
-        <li><b>Anónima:</b> no pedimos tu nombre, correo ni teléfono.</li>
+        <li><b>Solo te pedimos tu nombre.</b> No pedimos apellidos, correo ni teléfono.</li>
         <li>Solo las 3 primeras preguntas son obligatorias.</li>
       </ul>
+      <div class="field">
+        <label for="name">Tu nombre</label>
+        <input class="txt" id="name" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Por ejemplo: Ana" style="font-size:18px">
+        <small class="opt">Solo tu nombre, sin apellidos.</small>
+      </div>
+      <p class="err" id="name-err" role="alert" hidden></p>
       <button class="btn primary" id="go">Empezar</button>
     </div>
     <div class="card" id="team" hidden>
@@ -513,7 +520,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     $('cop-wrap').hidden = true; $('why-count').textContent = '0 / 600';
     goStep(1);
   }
-  $('go').addEventListener('click', function(){ reset(); show('form'); });
+  var person = '';
+  $('go').addEventListener('click', function(){
+    var n = clean($('name').value, 40).replace(/\s+/g, ' ');
+    if (n.length < 2){ $('name-err').textContent = 'Escribe tu nombre para empezar.'; $('name-err').hidden = false; $('name').focus(); return; }
+    $('name-err').hidden = true; person = n;
+    reset(); show('form');
+  });
+  $('name').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('go').click(); });
 
   /* ---------- Guardar y enviar ---------- */
   var last = null;
@@ -529,7 +543,8 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       nps: a.score, categoria: classify(a.score), por_que: a.why, tarea: a.task,
       dificultades: a.diff, sin_dificultades: a.diffNone ? 'si' : '', le_falta: a.need, no_necesita_mejoras: a.needNone ? 'si' : '',
       pagaria: a.pay || '', cop_mes: a.payCop === null ? '' : a.payCop,
-      edad: a.age, ocupacion: a.occ, tiene_dificultades: a.hasDiff || '', procedencia: a.source
+      edad: a.age, ocupacion: a.occ, tiene_dificultades: a.hasDiff || '', procedencia: a.source,
+      nombre: person
     };
   }
   function submit(){
@@ -542,7 +557,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     last = rec;
     var box = read(OUTBOX, []); if (SHEET){ box.push(rec); write(OUTBOX, box); }
     $('done-code').textContent = rec.codigo;
-    $('done-title').textContent = '¡Gracias por tu tiempo!';
+    $('done-title').textContent = '¡Gracias, ' + person.split(' ')[0] + '!';
     $('done-ok').textContent = savedLocal || SHEET ? 'Tus respuestas quedaron registradas.' : 'No se pudieron guardar en este navegador. Toca "Copiar mis respuestas" y envíalas al equipo.';
     $('done-send').textContent = SHEET ? 'Enviando…' : '';
     $('next-person').hidden = !kiosk;
@@ -555,7 +570,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       });
     }
   }
-  $('next-person').addEventListener('click', function(){ reset(); show('start'); });
+  $('next-person').addEventListener('click', function(){ reset(); person = ''; $('name').value = ''; show('start'); });
 
   $('copy-mine').addEventListener('click', function(){
     if (!last) return;
@@ -566,10 +581,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
   });
 
   /* ---------- ¿Ya respondió esta ronda? ---------- */
+  var blockedView = false;
   function checkAnswered(){
     if (kiosk) return;
     var id = read(ANSW, {})[round], rec = id ? store().responses[id] : null;
-    if (!rec || !$('v-form').hidden) return;
+    if (!$('v-form').hidden) return;
+    // Se abrió una ronda nueva: vuelve a la bienvenida para poder participar otra vez
+    if (!rec){ if (blockedView){ blockedView = false; show('start'); } return; }
+    blockedView = true;
     last = rec;
     $('done-title').textContent = 'Ya respondiste en ' + round;
     $('done-ok').textContent = 'Tus respuestas de esta ronda ya están guardadas. ¡Gracias!';
@@ -579,7 +598,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     show('done');
   }
   /* Equipo (solo en modo encuestador): copiar todo lo de este celular para pegarlo en Resultados */
-  var COLS = ['id','fecha','ronda','codigo','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
+  var COLS = ['id','fecha','ronda','codigo','nombre','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
   function toCsv(list){
     return [COLS.join(',')].concat(list.map(function(r){ return COLS.map(function(c){ var v = String(r[c] == null ? '' : r[c]); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); })).join('\n');
   }

@@ -178,6 +178,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 .tabpane[hidden]{display:none}
 .guide summary{cursor:pointer;font-family:var(--font-display);font-size:18px;font-weight:600}
 .comment.card{padding:16px;gap:6px}
+.op-name{color:var(--fg);font-size:15px;font-weight:800}
 .op-text{font-size:17px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 </style>
@@ -259,7 +260,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     <div class="card">
       <div class="seg-pick" role="group" aria-label="Qué opiniones ver" id="op-kind"></div>
       <div class="seg-pick" role="group" aria-label="Filtrar por tipo de persona" id="op-cat"></div>
-      <div class="field"><label for="op-q" class="sr-only">Buscar en las opiniones</label><input class="txt" id="op-q" placeholder="Buscar una palabra, por ejemplo: subtítulos" autocomplete="off" style="font-size:16px"></div>
+      <div class="field"><label for="op-q" class="sr-only">Buscar en las opiniones</label><input class="txt" id="op-q" placeholder="Buscar una palabra o un nombre" autocomplete="off" style="font-size:16px"></div>
       <div id="op-themes"></div>
     </div>
     <p class="muted small" id="op-count"></p>
@@ -390,7 +391,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     var round = (g('ronda') || 'Ronda 1').slice(0, 40); if (/^\d{4}-\d{2}$/.test(round)) round = 'Ronda 1';
     var cop = g('cop_mes').replace(/\D/g, '');
     var r = {
-      id: g('id'), code: /^P-[A-Z0-9]{6}$/i.test(g('codigo')) ? g('codigo').toUpperCase() : '', round: round, at: at, origin: origin,
+      id: g('id'), name: g('nombre').replace(/^'/, '').slice(0, 40), code: /^P-[A-Z0-9]{6}$/i.test(g('codigo')) ? g('codigo').toUpperCase() : '', round: round, at: at, origin: origin,
       score: score, why: (g('por_que') || g('comentario')).replace(/^'/, '').slice(0, 600), task: g('tarea'),
       diff: g('dificultades').replace(/^'/, '').slice(0, 600), diffNone: g('sin_dificultades') === 'si',
       need: g('le_falta').replace(/^'/, '').slice(0, 600), needNone: g('no_necesita_mejoras') === 'si',
@@ -611,7 +612,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     if (!cb.children.length) [['todos','Todos'],['detractor','Detractores'],['pasivo','Pasivos'],['promotor','Promotores']].forEach(function(f){ var b = el('button', 'filter', f[1]); b.type = 'button'; b.dataset.f = f[0]; b.addEventListener('click', function(){ opCat = f[0]; render(); }); cb.appendChild(b); });
     Array.prototype.forEach.call(cb.children, function(b){ b.setAttribute('aria-pressed', b.dataset.f === opCat ? 'true' : 'false'); });
     var base = list.filter(function(x){ return x[opKind] && (opCat === 'todos' || classify(x.score) === opCat); });
-    var items = base.filter(function(x){ return !opQuery || fold(x[opKind]).indexOf(fold(opQuery)) >= 0; })
+    var items = base.filter(function(x){ return !opQuery || fold(x[opKind] + ' ' + (x.name || '')).indexOf(fold(opQuery)) >= 0; })
       .sort(function(a, b){ return a.score - b.score || (b.at - a.at); });
     // Temas que se repiten
     var th = $('op-themes'); th.innerHTML = '';
@@ -631,6 +632,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     items.forEach(function(x){
       var cl = classify(x.score), card = el('div', 'card comment');
       var head = el('div', 'comment-head');
+      if (x.name) head.appendChild(el('b', 'op-name', x.name));
       head.appendChild(el('span', 'chip-score ' + CLS[cl], x.score)); head.appendChild(el('span', '', LABEL[cl]));
       if (x.task) head.appendChild(el('span', '', '· ' + NAMES.task[x.task]));
       if (x.at) head.appendChild(el('span', '', '· ' + when(x.at)));
@@ -749,10 +751,10 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     render();
   });
   $('export').addEventListener('click', function(){
-    var head = ['id','fecha','ronda','codigo','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
+    var head = ['id','fecha','ronda','codigo','nombre','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
     var rows = [head];
     all().sort(function(a, b){ return a.at - b.at; }).forEach(function(x){
-      rows.push([x.id, x.at ? new Date(x.at).toISOString().slice(0, 10) : '', x.round, x.code, x.score, classify(x.score), x.why, x.task, x.diff, x.diffNone ? 'si' : '', x.need, x.needNone ? 'si' : '', x.pay, x.payCop == null ? '' : x.payCop, x.age, x.occ, x.hasDiff, x.source]);
+      rows.push([x.id, x.at ? new Date(x.at).toISOString().slice(0, 10) : '', x.round, x.code, x.name, x.score, classify(x.score), x.why, x.task, x.diff, x.diffNone ? 'si' : '', x.need, x.needNone ? 'si' : '', x.pay, x.payCop == null ? '' : x.payCop, x.age, x.occ, x.hasDiff, x.source]);
     });
     var csv = rows.map(function(r){ return r.map(function(v){ v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n;\t]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n');
     var box = $('export-box'); box.value = csv;
