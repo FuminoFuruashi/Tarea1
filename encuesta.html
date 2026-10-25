@@ -8,8 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700;800&display=swap">
 <style>
-[hidden]{display:none!important}
-
 /* Layout: una sola columna (máx. 560px) — encuesta arriba, panel del administrador detrás de un PIN */
 :root{
   color-scheme: dark;
@@ -48,7 +46,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px soli
 .err{background:rgba(255,184,107,.14);color:var(--warn);border-radius:12px;padding:10px 12px;font-weight:700;font-size:14px}
 .ok-msg{background:rgba(78,214,164,.14);color:var(--good);border-radius:12px;padding:10px 12px;font-weight:700;font-size:14px}
 .note{font-size:13px;color:var(--muted);text-align:center}
-/* Cocos */
+/* Coco */
 .mascot{display:flex;align-items:flex-end;gap:10px}
 .mascot svg{flex:none}
 .bubble{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:12px 14px;font-weight:700}
@@ -163,111 +161,120 @@ select.sel{min-height:44px;border-radius:12px;border:1px solid var(--line);backg
 .textlist p{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;white-space:pre-line}
 .textlist p:last-child{border-bottom:0}
 
+[hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
+.bubble::before{content:"Cocos";display:block;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--violet);margin-bottom:2px}
+.facts{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:16px}
 .btn.danger{color:var(--warn);border-color:rgba(255,184,107,.45)}
 .btn.danger-solid{background:var(--warn);border-color:var(--warn);color:var(--ink)}
-.bubble::before{content:"Cocos";display:block;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--violet);margin-bottom:2px}
+.req{color:var(--warn)} .opt{color:var(--muted)}
+.tabsbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tabsbar::-webkit-scrollbar{display:none}
+.tabbtn{flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--font-body);font-weight:800;font-size:15px;cursor:pointer}
+.tabbtn[aria-selected="true"]{background:var(--violet);border-color:var(--violet);color:var(--ink)}
+.tabbtn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.tabpane{display:flex;flex-direction:column;gap:16px}
+.tabpane[hidden]{display:none}
+.guide summary{cursor:pointer;font-family:var(--font-display);font-size:18px;font-weight:600}
+.comment.card{padding:16px;gap:6px}
+.op-text{font-size:17px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
+.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 </style>
 
 <div class="wrap">
   <header>
     <span class="logo-icon" aria-hidden="true"></span>
     <span class="logo-word" role="img" aria-label="Coclia"></span>
-    <button class="linkbtn head-link" id="go-admin">Resultados</button>
+    <span class="eyebrow head-link" id="mode-tag" hidden>Modo encuestador</span>
   </header>
 
-  <!-- ===================== ENCUESTA ===================== -->
-  <section id="v-survey" aria-labelledby="t-survey">
+  <!-- BIENVENIDA -->
+  <section id="v-start" aria-labelledby="t-start">
     <div class="mascot">
-      <svg viewBox="0 0 240 240" width="72" height="72" role="img" aria-label="Cocos, el conejito de Coclia">
-              <ellipse cx="88" cy="74" rx="22" ry="52" transform="rotate(-10 88 74)" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
-              <ellipse cx="88" cy="80" rx="9" ry="34" transform="rotate(-10 88 80)" fill="#9B7BFF"></ellipse>
-              <ellipse cx="152" cy="74" rx="22" ry="52" transform="rotate(16 152 74)" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
-              <ellipse cx="152" cy="80" rx="9" ry="34" transform="rotate(16 152 80)" fill="#9B7BFF"></ellipse>
-              <ellipse cx="120" cy="152" rx="72" ry="62" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
-              <circle cx="80" cy="172" r="11" fill="#9B7BFF" opacity="0.35"></circle>
-              <circle cx="160" cy="172" r="11" fill="#9B7BFF" opacity="0.35"></circle>
-              <circle cx="96" cy="148" r="8" fill="#0B0820"></circle>
-              <circle cx="146" cy="148" r="8" fill="#0B0820"></circle>
-              <circle cx="98.5" cy="145" r="2.6" fill="#FFFFFF"></circle>
-              <circle cx="148.5" cy="145" r="2.6" fill="#FFFFFF"></circle>
-              <path d="M112 165 Q120 158 128 165 Q120 175 112 165 Z" fill="#9B7BFF" stroke="#0B0820" stroke-width="3" stroke-linejoin="round"></path>
-              <path d="M120 172 V178 M120 178 Q113 186 106 180 M120 178 Q127 186 134 180" fill="none" stroke="#0B0820" stroke-width="3" stroke-linecap="round"></path>
-              <path d="M176 104 C198 108 206 136 196 166" fill="none" stroke="#0B0820" stroke-width="22" stroke-linecap="round"></path>
-              <path d="M176 104 C198 108 206 136 196 166" fill="none" stroke="#5B9BFF" stroke-width="12" stroke-linecap="round"></path>
-              <path d="M180 107 L171 117" fill="none" stroke="#0B0820" stroke-width="4" stroke-linecap="round"></path>
-              <circle cx="166" cy="124" r="11" fill="#5B9BFF" stroke="#0B0820" stroke-width="4"></circle>
-              <circle cx="166" cy="124" r="4" fill="#FFFFFF"></circle>
-              <path d="M214 126 Q222 138 214 150" fill="none" stroke="#9B7BFF" stroke-width="6" stroke-linecap="round"></path>
-              <path d="M226 116 Q240 138 226 160" fill="none" stroke="#9B7BFF" stroke-width="6" stroke-linecap="round"></path>
-            </svg>
-      <div class="bubble" id="coco-msg">¡Hola! Soy Cocos. Son 7 preguntas cortas sobre tu experiencia con Coclia. No pedimos tu nombre.</div>
+      <svg viewBox="0 0 240 240" width="64" height="64" role="img" aria-label="Cocos, el conejito de Coclia">
+          <ellipse cx="88" cy="74" rx="22" ry="52" transform="rotate(-10 88 74)" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
+          <ellipse cx="88" cy="80" rx="9" ry="34" transform="rotate(-10 88 80)" fill="#9B7BFF"></ellipse>
+          <ellipse cx="152" cy="74" rx="22" ry="52" transform="rotate(16 152 74)" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
+          <ellipse cx="152" cy="80" rx="9" ry="34" transform="rotate(16 152 80)" fill="#9B7BFF"></ellipse>
+          <ellipse cx="120" cy="152" rx="72" ry="62" fill="#FFFFFF" stroke="#0B0820" stroke-width="7"></ellipse>
+          <circle cx="96" cy="148" r="8" fill="#0B0820"></circle>
+          <circle cx="146" cy="148" r="8" fill="#0B0820"></circle>
+          <circle cx="98.5" cy="145" r="2.6" fill="#FFFFFF"></circle>
+          <circle cx="148.5" cy="145" r="2.6" fill="#FFFFFF"></circle>
+          <path d="M112 165 Q120 158 128 165 Q120 175 112 165 Z" fill="#9B7BFF" stroke="#0B0820" stroke-width="3" stroke-linejoin="round"></path>
+          <path d="M176 104 C198 108 206 136 196 166" fill="none" stroke="#0B0820" stroke-width="22" stroke-linecap="round"></path>
+          <path d="M176 104 C198 108 206 136 196 166" fill="none" stroke="#5B9BFF" stroke-width="12" stroke-linecap="round"></path>
+          <circle cx="166" cy="124" r="11" fill="#5B9BFF" stroke="#0B0820" stroke-width="4"></circle>
+          <path d="M214 126 Q222 138 214 150" fill="none" stroke="#9B7BFF" stroke-width="6" stroke-linecap="round"></path>
+          <path d="M226 116 Q240 138 226 160" fill="none" stroke="#9B7BFF" stroke-width="6" stroke-linecap="round"></path>
+        </svg>
+      <div class="bubble">¡Hola! Soy Cocos. Queremos saber qué te pareció Coclia para mejorarla.</div>
     </div>
+    <div class="card">
+      <p class="eyebrow" id="round-tag">Ronda 1</p>
+      <h1 id="t-start">Encuesta de Coclia</h1>
+      <ul class="facts">
+        <li><b>7 preguntas</b>, unos 3 minutos.</li>
+        <li><b>Anónima:</b> no pedimos tu nombre, correo ni teléfono.</li>
+        <li>Solo las 3 primeras preguntas son obligatorias.</li>
+      </ul>
+      <button class="btn primary" id="go">Empezar</button>
+    </div>
+  </section>
 
+  <!-- PREGUNTAS -->
+  <section id="v-form" aria-labelledby="q-title" hidden>
     <div class="card" id="form">
-      <h1 id="t-survey" class="sr-only">Encuesta de validación de Coclia</h1>
-      <div class="steps-top"><span id="step-count">Pregunta 1 de 7</span><span id="round-label">Ronda 1</span></div>
+      <div class="steps-top"><span id="step-count">Pregunta 1 de 7</span><span id="step-req"></span></div>
       <div class="track" aria-hidden="true"><div class="fill" id="step-fill" style="width:14%"></div></div>
 
-      <!-- 1. NPS -->
       <div class="step" data-step="1">
         <h2 class="q" id="q1">Del 0 al 10, ¿qué tan probable es que le recomiendes esta solución a alguien que tiene este problema?</h2>
-        <span class="req">Obligatoria</span>
         <div class="scale" role="radiogroup" aria-labelledby="q1" id="scale"></div>
         <div class="scale-ends" aria-hidden="true"><span><b>0</b> Nada probable</span><span><b>10</b> Extremadamente probable</span></div>
-        <p class="picked" id="picked" aria-live="polite">Toca un número para elegir tu respuesta.</p>
+        <p class="picked" id="picked" aria-live="polite">Toca un número.</p>
       </div>
 
-      <!-- 2. Motivo -->
       <div class="step" data-step="2" hidden>
-        <label class="q" for="why" id="q2">¿Por qué diste esa calificación?</label>
-        <span class="req">Obligatoria</span>
+        <label class="q" for="why">¿Por qué diste esa calificación?</label>
         <textarea id="why" maxlength="600" rows="4" placeholder="Cuéntanos con tus palabras"></textarea>
         <small class="opt" id="why-count">0 / 600</small>
       </div>
 
-      <!-- 3. Tarea -->
       <div class="step" data-step="3" hidden>
         <h2 class="q" id="q3">¿Lograste completar la tarea que te propusimos en Coclia?</h2>
-        <span class="req">Obligatoria</span>
+        <p class="muted small">Por ejemplo: activar los subtítulos o practicar una palabra.</p>
         <div class="choices" role="radiogroup" aria-labelledby="q3" data-field="task"
              data-options='[["sin_ayuda","Sí, sin ayuda"],["con_ayuda","Sí, con ayuda"],["no","No"]]'></div>
       </div>
 
-      <!-- 4. Dificultades -->
       <div class="step" data-step="4" hidden>
-        <label class="q" for="diff" id="q4">¿Qué fue lo más confuso o difícil al utilizar Coclia?</label>
-        <span class="opt">Opcional</span>
+        <label class="q" for="diff">¿Qué fue lo más confuso o difícil al utilizar Coclia?</label>
         <textarea id="diff" maxlength="600" rows="4" placeholder="Por ejemplo: no encontré dónde…"></textarea>
         <label class="check" for="diff-none"><input type="checkbox" id="diff-none"> No tuve dificultades</label>
       </div>
 
-      <!-- 5. Necesidades -->
       <div class="step" data-step="5" hidden>
-        <label class="q" for="need" id="q5">¿Qué le falta a Coclia para que la utilizaras de verdad en tu vida cotidiana?</label>
-        <span class="opt">Opcional</span>
+        <label class="q" for="need">¿Qué le falta a Coclia para que la utilizaras de verdad en tu vida cotidiana?</label>
         <textarea id="need" maxlength="600" rows="4" placeholder="Por ejemplo: que funcione sin internet…"></textarea>
         <label class="check" for="need-none"><input type="checkbox" id="need-none"> No necesita ninguna mejora adicional</label>
       </div>
 
-      <!-- 6. Pago -->
       <div class="step" data-step="6" hidden>
         <h2 class="q" id="q6">¿Pagarías por utilizar Coclia si resolviera tus necesidades?</h2>
-        <span class="opt">Opcional</span>
         <div class="choices inline" role="radiogroup" aria-labelledby="q6" data-field="pay"
              data-options='[["si","Sí"],["no","No"],["tal_vez","Tal vez"]]'></div>
         <div class="sub-q" id="cop-wrap" hidden>
           <label class="q" style="font-size:19px" for="cop">¿Cuánto estarías dispuesto a pagar al mes?</label>
-          <span class="opt">Opcional · en pesos colombianos. Puedes escribir 0.</span>
+          <span class="opt">En pesos colombianos. Puedes escribir 0 o dejarlo vacío.</span>
           <div class="money"><span>$</span><input class="txt" id="cop" inputmode="numeric" autocomplete="off" placeholder="Escribe un valor"><span>COP</span></div>
         </div>
       </div>
 
-      <!-- 7. Perfil -->
       <div class="step" data-step="7" hidden>
         <h2 class="q">Sobre ti</h2>
-        <span class="opt">Todo es opcional. Puedes dejar en blanco lo que prefieras.</span>
+        <p class="muted small">Todo es opcional.</p>
         <div class="field">
           <label for="age">Edad</label>
           <select class="sel" id="age">
@@ -293,7 +300,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
           </select>
         </div>
         <div class="field">
-          <span style="font-weight:800" id="q7c">¿Experimentas dificultades de comunicación o pronunciación que Coclia busca resolver?</span>
+          <span style="font-weight:800" id="q7c">¿Tienes dificultades de comunicación o pronunciación que Coclia busca resolver?</span>
           <div class="choices inline" role="radiogroup" aria-labelledby="q7c" data-field="hasDiff"
                data-options='[["si","Sí"],["no","No"]]'></div>
         </div>
@@ -311,270 +318,93 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 
       <p class="err" id="err" role="alert" hidden></p>
       <div class="nav">
-        <button class="btn" id="prev" hidden>Atrás</button>
+        <button class="btn" id="prev">Atrás</button>
         <button class="btn primary" id="next">Siguiente</button>
       </div>
-      <details class="code-in" id="code-in">
-        <summary>¿Ya participaste antes? Usa tu código</summary>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="v-done" aria-labelledby="done-title" hidden>
+    <div class="mascot" id="done-mascot">
+      <div class="bubble" id="done-cocos">¡Mil gracias! Con tus respuestas vamos a mejorar Coclia.</div>
+    </div>
+    <div class="card">
+      <h1 id="done-title">¡Gracias por tu tiempo!</h1>
+      <p class="ok-msg" id="done-ok" role="status">Tus respuestas quedaron registradas.</p>
+      <p class="muted" id="done-send"></p>
+      <div>
+        <p class="muted small">Tu código anónimo de participante:</p>
+        <p class="code" id="done-code">P-000000</p>
+      </div>
+      <button class="btn primary" id="next-person" hidden>Siguiente persona</button>
+      <details class="code-in">
+        <summary>¿Te pidieron enviar tus respuestas?</summary>
         <div class="field">
-          <label for="code-field">Código de participante</label>
-          <input class="txt" id="code-field" autocomplete="off" placeholder="P-XXXXXX" maxlength="8" style="text-transform:uppercase">
-          <small class="opt">Así unimos tus respuestas de distintas rondas sin saber quién eres.</small>
+          <button class="btn" id="copy-mine">Copiar mis respuestas</button>
+          <small class="opt">Pégalas en WhatsApp o en un correo para el equipo de Coclia.</small>
+          <textarea class="csv-box" id="mine-box" readonly hidden aria-label="Tus respuestas en texto"></textarea>
+          <p class="ok-msg" id="mine-ok" role="status" hidden></p>
         </div>
       </details>
     </div>
-
-    <div class="card" id="done" hidden>
-      <h2 id="done-title">¡Gracias por tu tiempo!</h2>
-      <p class="ok-msg" id="done-ok" role="status">Tus respuestas quedaron registradas correctamente.</p>
-      <div>
-        <p class="muted">Tu código de participante:</p>
-        <p class="code" id="done-code">P-000000</p>
-        <p class="muted small">Guárdalo si participas en otra ronda. No está unido a tu nombre.</p>
-      </div>
-      <p class="muted" id="done-next"></p>
-      <div class="field" id="mine-wrap">
-        <button class="btn" id="copy-mine">Copiar mis respuestas para enviarlas</button>
-        <small class="opt">Si el equipo de Coclia te lo pide, pégalas en WhatsApp o en un correo.</small>
-        <textarea class="csv-box" id="mine-box" readonly hidden aria-label="Tus respuestas en texto"></textarea>
-        <p class="ok-msg" id="mine-ok" role="status" hidden></p>
-      </div>
-      <button class="btn primary" id="next-person" hidden>Siguiente persona</button>
-    </div>
-  </section>
-
-  <!-- ===================== PIN ===================== -->
-  <section id="v-lock" aria-labelledby="t-lock" hidden>
-    <button class="linkbtn" id="lock-back" style="align-self:flex-start;text-decoration:none">← Volver a la encuesta</button>
-    <form class="card" id="f-pin" novalidate>
-      <h1 id="t-lock">Resultados</h1>
-      <p class="muted" id="pin-help">Solo el administrador puede ver los resultados.</p>
-      <div class="field"><label for="pin1" id="pin1-label">PIN de administrador</label><input id="pin1" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
-      <div class="field" id="pin2-wrap" hidden><label for="pin2">Repite el PIN</label><input id="pin2" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
-      <p class="err" id="pin-err" role="alert" hidden></p>
-      <button class="btn violet" type="submit" id="pin-go">Entrar</button>
-      <button type="button" class="linkbtn" id="pin-forgot" style="align-self:center" hidden>Olvidé mi PIN</button>
-      <div id="pin-reset" style="display:flex;flex-direction:column;gap:10px" hidden>
-        <p style="font-weight:700">¿Crear un PIN nuevo? Las respuestas guardadas no se borran.</p>
-        <div class="row">
-          <button type="button" class="btn" id="pin-reset-no">Cancelar</button>
-          <button type="button" class="btn violet" id="pin-reset-yes">Sí, crear PIN nuevo</button>
-        </div>
-      </div>
-    </form>
-  </section>
-
-  <!-- ===================== PANEL ===================== -->
-  <section id="v-admin" aria-labelledby="t-admin" hidden>
-    <div class="row" style="align-items:center;justify-content:space-between">
-      <h1 id="t-admin">Resultados</h1>
-      <button class="btn sm" id="lock-out">Salir del panel</button>
-    </div>
-    <div class="row" style="align-items:center">
-      <label for="round-filter" class="muted small" style="font-weight:800">Ver:</label>
-      <select class="sel" id="round-filter" style="flex:1"></select>
-    </div>
-    <p class="muted small">Respuestas guardadas en este dispositivo. Se actualiza solo cuando llega una respuesta nueva.</p>
-
-    <div class="card" id="empty"><p><b>Aún no hay suficientes respuestas para calcular el NPS.</b></p><p class="muted">Cuando alguien responda la encuesta, aquí verás los resultados.</p></div>
-
-    <div id="body" style="display:flex;flex-direction:column;gap:16px" hidden>
-      <div id="warnings" style="display:flex;flex-direction:column;gap:8px"></div>
-
-      <!-- NPS -->
-      <div class="card">
-        <div class="hero-top">
-          <div><span class="eyebrow">NPS</span><b id="nps">0</b></div>
-          <span class="muted" id="total"></span>
-        </div>
-        <div aria-hidden="true">
-          <div class="gauge-track"><span class="gauge-zero"></span><span class="gauge-mark" id="mark"></span></div>
-          <div class="gauge-scale"><span>−100</span><span>0</span><span>+100</span></div>
-        </div>
-        <div class="band" id="band"><b id="band-title"></b><span id="band-text"></span></div>
-        <p class="muted small">Estos rangos son una guía interna y orientativa para validar el prototipo, no un estándar universal. Un NPS alto no prueba por sí solo que Coclia funcione bien técnicamente ni que vaya a tener éxito comercial.</p>
-      </div>
-      <div class="cats">
-        <div class="cat pro"><span>Promotores · 9–10</span><b id="pro">0</b><em id="pro-pct">0 %</em></div>
-        <div class="cat pas"><span>Pasivos · 7–8</span><b id="pas">0</b><em id="pas-pct">0 %</em></div>
-        <div class="cat det"><span>Detractores · 0–6</span><b id="det">0</b><em id="det-pct">0 %</em></div>
-      </div>
-      <div class="card"><h3>Distribución de puntuaciones</h3><div class="dist" id="dist" role="img" aria-label=""></div></div>
-
-      <!-- Tarea -->
-      <div class="card"><h3>¿Completaron la tarea?</h3><div id="task"></div></div>
-
-      <!-- Pago -->
-      <div class="card">
-        <h3>Disposición de pago</h3>
-        <div id="pay"></div>
-        <div class="kpis" id="cop-kpis"></div>
-        <h3 style="font-size:16px">Valores mensuales propuestos (COP)</h3>
-        <div id="cop-dist"></div>
-        <p class="muted small">Decir que pagaría no es una compra real. Úsalo como una pista, no como una venta.</p>
-      </div>
-
-      <!-- Muestra / sesgo -->
-      <div class="card"><h3>¿De dónde viene la muestra?</h3><div id="source"></div></div>
-
-      <!-- Segmentos -->
-      <div class="card">
-        <h3>Resultados por perfil</h3>
-        <div class="seg-pick" role="group" aria-label="Segmentar por" id="seg-pick"></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Grupo</th><th class="n">Resp.</th><th class="n">NPS</th><th class="n">Sin ayuda</th><th class="n">Pagaría</th></tr></thead><tbody id="seg-body"></tbody></table></div>
-        <p class="muted small">Con menos de 5 respuestas en un grupo, el resultado no es confiable.</p>
-      </div>
-
-      <!-- Evolución -->
-      <div class="card">
-        <h3>Evolución por ronda</h3>
-        <div id="trend"></div>
-      </div>
-
-      <!-- Textos -->
-      <div class="card">
-        <h3>¿Por qué dieron esa calificación?</h3>
-        <div class="filters" role="group" aria-label="Filtrar" id="filters"></div>
-        <div id="comments"></div>
-      </div>
-      <div class="card"><h3>Dificultades mencionadas</h3><p class="muted small" id="diff-sum"></p><div class="textlist" id="diff-list"></div></div>
-      <div class="card"><h3>Lo que le falta a Coclia</h3><p class="muted small" id="need-sum"></p><div class="textlist" id="need-list"></div></div>
-    </div>
-
-    <!-- Guía -->
-    <details class="card guide" id="guide">
-      <summary style="cursor:pointer;font-family:var(--font-display);font-size:18px;font-weight:600">¿Cómo leer estos resultados?</summary>
-      <ol>
-        <li><b>Empieza por el tamaño y el origen de la muestra.</b> Si respondieron pocas personas, o la mayoría son amigos y familia, los números se ven mejor de lo que son.</li>
-        <li><b>Mira el NPS y su rango.</b> Por debajo de 0 es alerta; de 0 a 29, aceptación inicial; de 30 a 50, buena señal; más de 50, señal positiva que debes contrastar con quién respondió.</li>
-        <li><b>Revisa la tarea.</b> Si muchos necesitaron ayuda o no la completaron, hay problemas de uso, aunque el NPS sea bueno.</li>
-        <li><b>Lee los "por qué", las dificultades y lo que falta.</b> Ahí están las mejoras concretas. Empieza por los detractores.</li>
-        <li><b>Compara por perfil.</b> Lo más importante es la opinión de quienes sí tienen dificultades de comunicación.</li>
-        <li><b>Mira la disposición de pago con cuidado.</b> La mediana te dice el valor típico mejor que el promedio.</li>
-        <li><b>Compara rondas.</b> Después de cada mejora, abre una ronda nueva y revisa si los indicadores suben.</li>
-      </ol>
-    </details>
-
-    <div class="card">
-      <h3>Ajustes</h3>
-      <div class="field">
-        <span style="font-weight:800">Ronda de evaluación activa: <span id="round-now">Ronda 1</span></span>
-        <span class="muted small">Cada código de participante puede responder una vez por ronda. Abre una ronda nueva cuando hagas otra prueba del prototipo.</span>
-        <button class="btn" id="new-round">Abrir nueva ronda</button>
-        <div class="row" id="round-confirm" hidden>
-          <span style="flex-basis:100%;font-weight:700">¿Abrir <span id="round-next-name"></span>? Las respuestas anteriores se conservan.</span>
-          <button class="btn" id="round-cancel">Cancelar</button>
-          <button class="btn violet" id="round-yes">Sí, abrir</button>
-        </div>
-      </div>
-      <label class="switch" for="kiosk"><span><b>Modo encuestador</b><br><span class="muted small">Para pasarle este dispositivo a varias personas: después de cada respuesta aparece "Siguiente persona" con un código nuevo.</span></span><input type="checkbox" id="kiosk"></label>
-      <button class="btn" id="csv">Copiar respuestas (para Excel)</button>
-      <p class="muted small">Consejo: copia las respuestas antes de borrarlas.</p>
-      <textarea class="csv-box" id="csv-box" readonly hidden aria-label="Respuestas en formato CSV"></textarea>
-      <p class="ok-msg" id="csv-ok" role="status" hidden></p>
-    </div>
-
-    <div class="card" id="del-card">
-    <h3>Borrar resultados</h3>
-    <p class="muted small">Borra respuestas guardadas en este dispositivo. Útil para quitar respuestas de prueba antes de empezar.</p>
-    <div class="field">
-      <label for="del-what">¿Qué quieres borrar?</label>
-      <select class="sel" id="del-what"></select>
-    </div>
-    <button class="btn danger" id="del-btn">Borrar resultados</button>
-    <div id="del-confirm" style="display:flex;flex-direction:column;gap:10px" hidden>
-      <p style="font-weight:700" id="del-q"></p>
-      <div class="row">
-        <button class="btn" id="del-no">Cancelar</button>
-        <button class="btn danger-solid" id="del-yes">Sí, borrar</button>
-      </div>
-    </div>
-    <p class="ok-msg" id="del-ok" role="status" hidden></p>
-  </div>
   </section>
 </div>
 
 <script>
 (function(){
   'use strict';
+  /* La dirección de la hoja de Google se pega aquí cuando esté lista */
+  var CONFIG = { sheetUrl: '' };
+  var SHEET = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(CONFIG.sheetUrl) ? CONFIG.sheetUrl : '';
+
   var $ = function(id){ return document.getElementById(id); };
-  var KEY = 'coclia-encuesta-v2', OLD = 'coclia-encuesta-v1', DEV = 'coclia-encuesta-dispositivo-v2', ADM = 'coclia-encuesta-admin', UNLOCK = 'coclia-encuesta-abierto';
-  var MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  var TOTAL_STEPS = 7;
+  var KEY = 'coclia-encuesta-v3', OUTBOX = 'coclia-encuesta-pendientes', ME = 'coclia-participante', ANSW = 'coclia-respondio', ROUND = 'coclia-ronda', KIOSK = 'coclia-encuestador';
+  var TOTAL = 7;
 
-  /* ================= Reglas ================= */
-  function classify(score){ return score <= 6 ? 'detractor' : score <= 8 ? 'pasivo' : 'promotor'; }
-  function validResponse(r){
-    return !!r && typeof r.score === 'number' && Number.isInteger(r.score) && r.score >= 0 && r.score <= 10 && typeof r.round === 'string';
-  }
-  function computeNps(list){
-    var valid = list.filter(validResponse), n = valid.length;
-    if (!n) return null;
-    var p = 0, pa = 0, d = 0;
-    valid.forEach(function(r){ var c = classify(r.score); if (c === 'promotor') p++; else if (c === 'pasivo') pa++; else d++; });
-    var pp = p / n * 100, pap = pa / n * 100, dp = d / n * 100;
-    return { n: n, promotores: p, pasivos: pa, detractores: d, pctP: pp, pctPa: pap, pctD: dp, nps: Math.round(pp - dp) };
-  }
-  // Guía interna y orientativa (no es un estándar universal)
-  function interpret(nps){
-    if (nps < 0)   return { key:'alerta',   title:'Señal de alerta', text:'Hay más detractores que promotores. Investiga los problemas importantes antes de seguir.' };
-    if (nps <= 29) return { key:'inicial',  title:'Aceptación inicial', text:'Hay interés, pero Coclia necesita mejoras. Revisa las dificultades y lo que falta.' };
-    if (nps <= 50) return { key:'buena',    title:'Buena señal de aceptación', text:'La mayoría ve valor. Sigue mejorando y amplía la muestra.' };
-    return            { key:'positiva', title:'Señal positiva', text:'Muy buen resultado. Contrástalo con quién respondió: si son personas cercanas, puede estar inflado.' };
-  }
-  var CLOSE = ['familia', 'companeros'];
-  function biasInfo(list){
-    var known = list.filter(function(r){ return r.source; });
-    if (!known.length) return { known: 0, close: 0, pct: null, biased: false };
-    var close = known.filter(function(r){ return CLOSE.indexOf(r.source) >= 0; }).length;
-    var pct = close / known.length * 100;
-    return { known: known.length, close: close, pct: pct, biased: pct > 50 };
-  }
-  function median(xs){ if (!xs.length) return null; var s = xs.slice().sort(function(a, b){ return a - b; }), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
-
-  /* ================= Almacenamiento ================= */
-  function read(k, def){ try { var v = JSON.parse(localStorage.getItem(k)); return v || def; } catch(e){ return def; } }
+  function read(k, def){ try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch(e){ return def; } }
   function write(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
-  function cfg(){ var a = read(ADM, {}); a.round = a.round || 'Ronda 1'; a.rounds = a.rounds || [a.round]; return a; }
+  function classify(n){ return n <= 6 ? 'detractor' : n <= 8 ? 'pasivo' : 'promotor'; }
+  function rand(n){
+    var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint8Array(n);
+    try { crypto.getRandomValues(a); } catch(e){ for (var i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); }
+    return Array.prototype.map.call(a, function(b){ return A[b % A.length]; }).join('');
+  }
+  var kiosk = location.hash === '#encuestador' || read(KIOSK, false) === true;
+  $('mode-tag').hidden = !kiosk;
+
+  /* ---------- Ronda activa ---------- */
+  var round = read(ROUND, 'Ronda 1') || 'Ronda 1';
+  function showRound(){ $('round-tag').textContent = round; }
+  showRound();
+  if (SHEET){
+    fetch(SHEET + '?accion=config').then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok && typeof d.ronda === 'string'){ round = d.ronda.slice(0, 40); write(ROUND, round); showRound(); checkAnswered(); }
+    }).catch(function(){});
+  }
+
+  /* ---------- Envío (con reintento si no hay internet) ---------- */
   function store(){ var s = read(KEY, null); return (s && s.responses) ? s : { responses: {} }; }
-  function all(){ var r = store().responses; return Object.keys(r).map(function(k){ return r[k]; }).filter(validResponse); }
-  // Respuestas de la versión anterior (solo NPS) pasan a la Ronda 1
-  (function migrate(){
-    var old = read(OLD, null); if (!old || !old.responses) return;
-    var s = store(), moved = 0;
-    Object.keys(old.responses).forEach(function(k){
-      var o = old.responses[k];
-      if (!o || typeof o.score !== 'number' || s.responses['v1_' + k]) return;
-      s.responses['v1_' + k] = { code: null, round: 'Ronda 1', score: o.score, why: o.comment || '', at: o.at || Date.now(), legacy: true };
-      moved++;
-    });
-    if (moved) write(KEY, s);
-    try { localStorage.removeItem(OLD); } catch(e){}
-  })();
-
-  function newCode(){
-    var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint8Array(6);
-    try { crypto.getRandomValues(a); } catch(e){ for (var i = 0; i < 6; i++) a[i] = Math.floor(Math.random() * 256); }
-    return 'P-' + Array.prototype.map.call(a, function(b){ return A[b % A.length]; }).join('');
+  function sendOne(rec){
+    if (!SHEET) return Promise.reject(new Error('sin-hoja'));
+    // La respuesta de Google no se puede leer desde otra página; si la conexión funciona, se da por enviada.
+    return fetch(SHEET, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(rec) });
   }
-  function kiosk(){ return !!cfg().kiosk; }
-  function signed(n){ return n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0'; }
-  function pct(x){ return Math.round(x) + ' %'; }
-  function cop(n){ return '$' + Math.round(n).toLocaleString('es-CO'); }
-
-  /* ================= Vistas ================= */
-  function show(v){
-    ['survey','lock','admin'].forEach(function(n){ $('v-' + n).hidden = n !== v; });
-    $('go-admin').hidden = v !== 'survey';
-    if (v === 'admin') renderAdmin();
-    window.scrollTo(0, 0);
+  function flush(){
+    var box = read(OUTBOX, []);
+    if (!SHEET || !box.length) return Promise.resolve(0);
+    var left = [], sent = 0;
+    return box.reduce(function(p, rec){
+      return p.then(function(){ return sendOne(rec).then(function(){ sent++; }, function(){ left.push(rec); }); });
+    }, Promise.resolve()).then(function(){ write(OUTBOX, left); return sent; });
   }
+  flush();
+  window.addEventListener('online', flush);
 
-  /* ================= Encuesta ================= */
-  var ans, step, code, sending = false;
-  function blankAns(){ return { score: null, why: '', task: null, diff: '', diffNone: false, need: '', needNone: false, pay: null, payCop: null, age: '', occ: '', hasDiff: null, source: '' }; }
+  /* ---------- Formulario ---------- */
+  var ans, step, sending = false;
+  function blank(){ return { score: null, why: '', task: null, diff: '', diffNone: false, need: '', needNone: false, pay: null, payCop: null, age: '', occ: '', hasDiff: null, source: '' }; }
 
-  // Escala 0–10
   var scale = $('scale');
   for (var k = 0; k <= 10; k++){
     (function(n){
@@ -598,12 +428,11 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     $('picked').textContent = 'Elegiste ' + n + '.';
     $('err').hidden = true;
   }
-  // Opciones tipo radio
-  var choiceGroups = {};
+  var groups = {};
   Array.prototype.forEach.call(document.querySelectorAll('.choices[data-field]'), function(box){
-    var field = box.dataset.field, opts = JSON.parse(box.dataset.options);
-    choiceGroups[field] = box;
-    opts.forEach(function(o, i){
+    var field = box.dataset.field;
+    groups[field] = box;
+    JSON.parse(box.dataset.options).forEach(function(o, i){
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'choice'; b.textContent = o[1]; b.dataset.v = o[0];
       b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false'); b.tabIndex = i === 0 ? 0 : -1;
@@ -619,21 +448,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
   });
   function setChoice(field, v){
     ans[field] = v;
-    Array.prototype.forEach.call(choiceGroups[field].children, function(b){ var on = b.dataset.v === v; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
-    if (field === 'pay'){
-      var show_ = v === 'si' || v === 'tal_vez';
-      $('cop-wrap').hidden = !show_;
-      if (!show_){ ans.payCop = null; $('cop').value = ''; }
-    }
+    Array.prototype.forEach.call(groups[field].children, function(b){ var on = b.dataset.v === v; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    if (field === 'pay'){ var show = v === 'si' || v === 'tal_vez'; $('cop-wrap').hidden = !show; if (!show){ ans.payCop = null; $('cop').value = ''; } }
     $('err').hidden = true;
   }
   $('why').addEventListener('input', function(){ $('why-count').textContent = this.value.length + ' / 600'; });
   $('diff-none').addEventListener('change', function(){ $('diff').disabled = this.checked; });
   $('need-none').addEventListener('change', function(){ $('need').disabled = this.checked; });
-  $('cop').addEventListener('input', function(){
-    var digits = this.value.replace(/\D/g, '').slice(0, 9);
-    this.value = digits ? parseInt(digits, 10).toLocaleString('es-CO') : '';
-  });
+  $('cop').addEventListener('input', function(){ var d = this.value.replace(/\D/g, '').slice(0, 8); this.value = d ? parseInt(d, 10).toLocaleString('es-CO') : ''; });
 
   function clean(s, max){ return String(s || '').replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, ' ').trim().slice(0, max); }
   function collect(n){
@@ -645,415 +467,113 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
   }
   function validate(n){
     if (n === 1 && ans.score === null) return 'Elige un número del 0 al 10 para continuar.';
-    if (n === 2 && ans.why.length < 2) return 'Escribe por qué diste esa calificación. Es obligatoria.';
+    if (n === 2 && ans.why.length < 2) return 'Escribe por qué diste esa calificación.';
     if (n === 3 && !ans.task) return 'Elige una opción para continuar.';
-    if (n === 6 && ans.payCop !== null && (ans.payCop < 0 || ans.payCop > 10000000)) return 'Escribe un valor entre 0 y 10.000.000 COP, o déjalo vacío.';
+    if (n === 6 && ans.payCop !== null && ans.payCop > 10000000) return 'Escribe un valor hasta 10.000.000 COP, o déjalo vacío.';
     return null;
   }
-  var COCO = {
-    1: '¡Hola! Soy Cocos. Son 7 preguntas cortas sobre tu experiencia con Coclia. No pedimos tu nombre.',
-    2: 'Gracias. Tu explicación nos ayuda mucho.',
-    3: 'Ahora cuéntanos cómo te fue con la prueba.',
-    4: 'Si algo fue difícil, queremos saberlo para arreglarlo.',
-    5: 'Imagina usar Coclia todos los días.',
-    6: 'Esta pregunta no es una venta. Solo queremos entender su valor.',
-    7: '¡Última! Todo es opcional.'
-  };
   function goStep(n){
     step = n;
     Array.prototype.forEach.call(document.querySelectorAll('.step'), function(s){ s.hidden = parseInt(s.dataset.step, 10) !== n; });
-    $('step-count').textContent = 'Pregunta ' + n + ' de ' + TOTAL_STEPS;
-    $('step-fill').style.width = (n / TOTAL_STEPS * 100) + '%';
-    $('prev').hidden = n === 1;
-    $('next').textContent = n === TOTAL_STEPS ? 'Enviar respuestas' : 'Siguiente';
-    $('code-in').hidden = n !== 1;
-    $('coco-msg').textContent = COCO[n];
+    $('step-count').textContent = 'Pregunta ' + n + ' de ' + TOTAL;
+    $('step-req').textContent = n <= 3 ? 'Obligatoria' : 'Opcional';
+    $('step-req').className = n <= 3 ? 'req' : 'opt';
+    $('step-fill').style.width = (n / TOTAL * 100) + '%';
+    $('prev').style.visibility = n === 1 ? 'hidden' : 'visible';
+    $('next').textContent = n === TOTAL ? 'Enviar respuestas' : 'Siguiente';
     $('err').hidden = true;
+    var focusEl = document.querySelector('.step[data-step="' + n + '"] .q');
+    if (focusEl){ focusEl.setAttribute('tabindex', '-1'); try { focusEl.focus({ preventScroll: true }); } catch(e){} }
+    window.scrollTo(0, 0);
   }
   $('next').addEventListener('click', function(){
     collect(step);
     var e = validate(step);
     if (e){ $('err').textContent = e; $('err').hidden = false; return; }
-    if (step < TOTAL_STEPS){ goStep(step + 1); try { $('form').scrollIntoView({ block: 'start' }); } catch(x){} return; }
-    submit();
+    if (step < TOTAL) goStep(step + 1); else submit();
   });
   $('prev').addEventListener('click', function(){ collect(step); if (step > 1) goStep(step - 1); });
 
-  function resetForm(){
-    ans = blankAns(); sending = false;
-    var dev = read(DEV, {});
-    code = (!kiosk() && dev.code) ? dev.code : newCode();
+  function show(v){ ['start', 'form', 'done'].forEach(function(n){ $('v-' + n).hidden = n !== v; }); window.scrollTo(0, 0); }
+  function reset(){
+    ans = blank(); sending = false;
     Array.prototype.forEach.call(scale.children, function(b, i){ b.setAttribute('aria-checked', 'false'); b.tabIndex = i === 0 ? 0 : -1; });
-    $('picked').textContent = 'Toca un número para elegir tu respuesta.';
-    Object.keys(choiceGroups).forEach(function(f){ Array.prototype.forEach.call(choiceGroups[f].children, function(b, i){ b.setAttribute('aria-checked', 'false'); b.tabIndex = i === 0 ? 0 : -1; }); });
-    ['why','diff','need','cop','code-field'].forEach(function(id){ $(id).value = ''; });
-    $('diff').disabled = false; $('need').disabled = false;
-    $('diff-none').checked = false; $('need-none').checked = false;
-    ['age','occ','src'].forEach(function(id){ $(id).value = ''; });
+    $('picked').textContent = 'Toca un número.';
+    Object.keys(groups).forEach(function(f){ Array.prototype.forEach.call(groups[f].children, function(b, i){ b.setAttribute('aria-checked', 'false'); b.tabIndex = i === 0 ? 0 : -1; }); });
+    ['why', 'diff', 'need', 'cop'].forEach(function(id){ $(id).value = ''; });
+    $('diff').disabled = false; $('need').disabled = false; $('diff-none').checked = false; $('need-none').checked = false;
+    ['age', 'occ', 'src'].forEach(function(id){ $(id).value = ''; });
     $('cop-wrap').hidden = true; $('why-count').textContent = '0 / 600';
-    $('code-in').open = false;
-    $('form').hidden = false; $('done').hidden = true;
     goStep(1);
   }
-  function renderSurvey(){
-    var c = cfg(); $('round-label').textContent = c.round;
-    var dev = read(DEV, {});
-    var id = dev.code ? dev.code + '__' + c.round : null;
-    var mine = (!kiosk() && id) ? store().responses[id] : null;
-    if (mine) showDone(mine, true); else resetForm();
-  }
-  function showDone(r, already){
-    $('form').hidden = true; $('done').hidden = false;
-    $('done-title').textContent = already ? 'Ya respondiste en ' + r.round : '¡Gracias por tu tiempo!';
-    $('done-ok').textContent = already ? 'Tus respuestas de esta ronda ya están guardadas.' : 'Tus respuestas quedaron registradas correctamente.';
-    $('done-code').textContent = r.code || '—';
-    $('done-next').textContent = kiosk() ? 'Pásale el dispositivo a la siguiente persona.' : 'Si el equipo abre una nueva ronda de evaluación, podrás participar otra vez.';
-    $('next-person').hidden = !kiosk();
-    lastDone = r; $('mine-box').hidden = true; $('mine-ok').hidden = true;
-    $('coco-msg').textContent = '¡Mil gracias! Con tus respuestas vamos a mejorar Coclia.';
-  }
-  $('next-person').addEventListener('click', resetForm);
+  $('go').addEventListener('click', function(){ reset(); show('form'); });
 
+  /* ---------- Guardar y enviar ---------- */
+  var last = null;
+  function myCode(){
+    if (kiosk) return 'P-' + rand(6);
+    var c = read(ME, null);
+    if (!c){ c = 'P-' + rand(6); write(ME, c); }
+    return c;
+  }
+  function toRecord(a){
+    return {
+      id: Date.now().toString(36) + '-' + rand(8), fecha: new Date().toISOString(), ronda: round, codigo: myCode(),
+      nps: a.score, categoria: classify(a.score), por_que: a.why, tarea: a.task,
+      dificultades: a.diff, sin_dificultades: a.diffNone ? 'si' : '', le_falta: a.need, no_necesita_mejoras: a.needNone ? 'si' : '',
+      pagaria: a.pay || '', cop_mes: a.payCop === null ? '' : a.payCop,
+      edad: a.age, ocupacion: a.occ, tiene_dificultades: a.hasDiff || '', procedencia: a.source
+    };
+  }
   function submit(){
     if (sending) return;
     sending = true; $('next').disabled = true;
-    var c = cfg();
-    var typed = clean($('code-field').value, 8).toUpperCase();
-    if (typed){
-      if (!/^P-[A-Z0-9]{6}$/.test(typed)){ fail('El código debe verse así: P-AB12CD. Revísalo o déjalo vacío.'); return; }
-      code = typed;
-    }
-    // Una respuesta por código y por ronda: la clave fija evita contarla dos veces
-    var id = code + '__' + c.round;
-    var s = store();
-    if (s.responses[id]){ fail('El código ' + code + ' ya respondió en ' + c.round + '. ¡Gracias! Podrás participar en la próxima ronda.'); return; }
-    var r = {
-      code: code, round: c.round, at: Date.now(),
-      score: ans.score, why: ans.why, task: ans.task,
-      diff: ans.diff, diffNone: ans.diffNone, need: ans.need, needNone: ans.needNone,
-      pay: ans.pay, payCop: ans.payCop,
-      age: ans.age, occ: ans.occ, hasDiff: ans.hasDiff, source: ans.source
-    };
-    if (!validResponse(r) || !r.why || !r.task){ fail('Faltan respuestas obligatorias. Revisa las preguntas 1 a 3.'); return; }
-    s.responses[id] = r;
-    if (!write(KEY, s)){ fail('No se pudieron guardar tus respuestas en este navegador. Revisa que no esté en modo privado e inténtalo de nuevo.'); return; }
-    if (!kiosk()){ var dev = read(DEV, {}); dev.code = code; write(DEV, dev); }
+    var rec = toRecord(ans);
+    var s = store(); s.responses[rec.id] = rec;
+    var savedLocal = write(KEY, s);
+    if (!kiosk){ var done = read(ANSW, {}); done[round] = rec.id; write(ANSW, done); }
+    last = rec;
+    var box = read(OUTBOX, []); if (SHEET){ box.push(rec); write(OUTBOX, box); }
+    $('done-code').textContent = rec.codigo;
+    $('done-title').textContent = '¡Gracias por tu tiempo!';
+    $('done-ok').textContent = savedLocal || SHEET ? 'Tus respuestas quedaron registradas.' : 'No se pudieron guardar en este navegador. Toca "Copiar mis respuestas" y envíalas al equipo.';
+    $('done-send').textContent = SHEET ? 'Enviando…' : '';
+    $('next-person').hidden = !kiosk;
+    show('done');
     sending = false; $('next').disabled = false;
-    showDone(r, false);
-    function fail(m){ $('err').textContent = m; $('err').hidden = false; sending = false; $('next').disabled = false; }
-  }
-
-  /* ================= PIN ================= */
-  function sha(text){
-    if (window.crypto && crypto.subtle && window.TextEncoder){
-      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function(buf){
-        return Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+    if (SHEET){
+      flush().then(function(){
+        var pend = read(OUTBOX, []).some(function(r){ return r.id === rec.id; });
+        $('done-send').textContent = pend ? 'No hay internet ahora. Se enviarán solas cuando vuelvas a conectarte con esta página abierta.' : 'Enviadas al equipo de Coclia.';
       });
     }
-    var h = 5381; for (var i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-    return Promise.resolve('d' + (h >>> 0).toString(16));
   }
-  function unlocked(){ try { return sessionStorage.getItem(UNLOCK) === '1'; } catch(e){ return false; } }
-  function openLock(){
-    if (unlocked()){ show('admin'); return; }
-    var hasPin = !!cfg().hash;
-    $('pin-help').textContent = hasPin ? 'Solo el administrador puede ver los resultados.' : 'Crea un PIN de 4 a 6 números. Lo pedirá cada vez que alguien quiera ver los resultados en este dispositivo.';
-    $('pin1-label').textContent = hasPin ? 'PIN de administrador' : 'Nuevo PIN';
-    $('pin2-wrap').hidden = hasPin;
-    $('pin-go').textContent = hasPin ? 'Entrar' : 'Crear PIN y entrar';
-    $('pin1').value = ''; $('pin2').value = ''; $('pin-err').hidden = true;
-    $('pin-forgot').hidden = !hasPin; $('pin-reset').hidden = true;
-    show('lock'); $('pin1').focus({ preventScroll: true });
-  }
-  $('go-admin').addEventListener('click', openLock);
-  $('pin-forgot').addEventListener('click', function(){ this.hidden = true; $('pin-reset').hidden = false; });
-  $('pin-reset-no').addEventListener('click', function(){ $('pin-reset').hidden = true; $('pin-forgot').hidden = false; });
-  $('pin-reset-yes').addEventListener('click', function(){
-    var a = cfg(); delete a.hash; delete a.salt; write(ADM, a);
-    openLock();
-  });
-  $('lock-back').addEventListener('click', function(){ show('survey'); });
-  $('lock-out').addEventListener('click', function(){ try { sessionStorage.removeItem(UNLOCK); } catch(e){} renderSurvey(); show('survey'); });
-  $('f-pin').addEventListener('submit', function(ev){
-    ev.preventDefault();
-    var a = cfg(), p1 = $('pin1').value.trim(), p2 = $('pin2').value.trim();
-    function fail(m){ $('pin-err').textContent = m; $('pin-err').hidden = false; }
-    if (!/^\d{4,6}$/.test(p1)) return fail('El PIN debe tener de 4 a 6 números.');
-    function enter(){ try { sessionStorage.setItem(UNLOCK, '1'); } catch(e){} show('admin'); }
-    if (!a.hash){
-      if (p1 !== p2) return fail('Los PIN no coinciden.');
-      var salt = newCode() + Date.now();
-      sha(salt + '|' + p1).then(function(h){ a.salt = salt; a.hash = h; if (!write(ADM, a)) return fail('No se pudo guardar el PIN en este navegador.'); enter(); });
-    } else sha(a.salt + '|' + p1).then(function(h){ if (h !== a.hash) return fail('PIN incorrecto.'); enter(); });
-  });
+  $('next-person').addEventListener('click', function(){ reset(); show('start'); });
 
-  /* ================= Panel ================= */
-  var filter = 'todos', segBy = 'hasDiff', roundView = 'todas';
-  var LABEL = { promotor:'Promotor', pasivo:'Pasivo', detractor:'Detractor' };
-  var CLS = { promotor:'c-pro', pasivo:'c-pas', detractor:'c-det' };
-  var NAMES = {
-    task: { sin_ayuda:'Sí, sin ayuda', con_ayuda:'Sí, con ayuda', no:'No la completaron' },
-    pay: { si:'Sí pagaría', tal_vez:'Tal vez', no:'No pagaría' },
-    age: { menos_18:'Menos de 18', '18_24':'18 a 24', '25_34':'25 a 34', '35_44':'35 a 44', '45_54':'45 a 54', '55_64':'55 a 64', '65_mas':'65 o más' },
-    occ: { estudiante:'Estudiante', empleado:'Empleado', independiente:'Independiente', salud:'Profesional de salud', otra:'Otra' },
-    hasDiff: { si:'Con dificultades de comunicación', no:'Sin dificultades de comunicación' },
-    source: { familia:'Amigos o familiares', companeros:'Compañeros de estudio o trabajo', externo:'Fuera del círculo cercano', otros:'Otros' }
-  };
-  var SEGS = [['hasDiff','Dificultades'],['age','Edad'],['occ','Ocupación'],['source','Procedencia']];
-
-  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
-  function hbar(label, count, total, color){
-    var row = el('div', 'hbar'), t = el('div', 't'), f = el('div', 'f');
-    f.style.width = (total ? count / total * 100 : 0) + '%'; if (color) f.style.background = color;
-    t.appendChild(f);
-    row.appendChild(el('span', '', label)); row.appendChild(t); row.appendChild(el('b', '', total ? pct(count / total * 100) + ' · ' + count : '0'));
-    row.lastChild.style.whiteSpace = 'nowrap';
-    return row;
-  }
-
-  function renderAdmin(){
-    if (!unlocked()){ openLock(); return; }
-    fillDelete();
-    var c = cfg();
-    $('kiosk').checked = !!c.kiosk;
-    $('round-now').textContent = c.round;
-    // Selector de ronda
-    var rf = $('round-filter'), rounds = c.rounds.slice();
-    all().forEach(function(r){ if (rounds.indexOf(r.round) < 0) rounds.push(r.round); });
-    rf.innerHTML = '';
-    var o0 = el('option', '', 'Todas las rondas'); o0.value = 'todas'; rf.appendChild(o0);
-    rounds.forEach(function(r){ var o = el('option', '', r + (r === c.round ? ' (activa)' : '')); o.value = r; rf.appendChild(o); });
-    if (roundView !== 'todas' && rounds.indexOf(roundView) < 0) roundView = 'todas';
-    rf.value = roundView;
-
-    var list = all().filter(function(r){ return roundView === 'todas' || r.round === roundView; });
-    var r = computeNps(list);
-    $('empty').hidden = !!r; $('body').hidden = !r;
-    if (!r) return;
-
-    // Advertencias de muestra
-    var w = $('warnings'); w.innerHTML = '';
-    function warn(html){ var p = el('p', 'warn'); p.innerHTML = html; w.appendChild(p); }
-    if (r.n < 20) warn('<b>Muestra pequeña:</b> solo ' + r.n + (r.n === 1 ? ' respuesta' : ' respuestas') + '. Los porcentajes pueden cambiar mucho con cada persona nueva.');
-    var b = biasInfo(list);
-    if (b.biased) warn('<b>Posible sesgo:</b> el ' + pct(b.pct) + ' de quienes dijeron de dónde vienen son amigos, familia o compañeros. Busca usuarios fuera de tu círculo cercano.');
-
-    // NPS e interpretación
-    $('nps').textContent = signed(r.nps);
-    $('nps').style.color = r.nps > 0 ? 'var(--good)' : r.nps < 0 ? 'var(--warn)' : 'var(--fg)';
-    $('total').textContent = r.n + (r.n === 1 ? ' respuesta válida' : ' respuestas válidas');
-    $('mark').style.left = ((r.nps + 100) / 2) + '%';
-    var it = interpret(r.nps);
-    $('band').className = 'band ' + it.key; $('band-title').textContent = it.title; $('band-text').textContent = it.text;
-    $('pro').textContent = r.promotores; $('pro-pct').textContent = pct(r.pctP);
-    $('pas').textContent = r.pasivos;    $('pas-pct').textContent = pct(r.pctPa);
-    $('det').textContent = r.detractores; $('det-pct').textContent = pct(r.pctD);
-
-    // Distribución 0–10
-    var counts = []; for (var i = 0; i <= 10; i++) counts[i] = 0;
-    list.forEach(function(x){ counts[x.score]++; });
-    var max = Math.max.apply(null, counts) || 1, dist = $('dist'); dist.innerHTML = '';
-    counts.forEach(function(cn, i){
-      var col = el('div', 'dcol'); col.appendChild(el('i', '', cn));
-      var bar = el('div', 'dbar ' + CLS[classify(i)]); bar.style.height = (cn / max * 120) + 'px'; col.appendChild(bar);
-      col.appendChild(el('span', '', i)); dist.appendChild(col);
-    });
-    dist.setAttribute('aria-label', 'Respuestas por puntuación: ' + counts.map(function(cn, i){ return i + ': ' + cn; }).join(', '));
-
-    // Tarea
-    var task = $('task'); task.innerHTML = '';
-    var withTask = list.filter(function(x){ return x.task; });
-    if (!withTask.length) task.appendChild(el('p', 'muted', 'Sin respuestas a esta pregunta todavía.'));
-    [['sin_ayuda','var(--good)'],['con_ayuda','var(--blue)'],['no','var(--warn)']].forEach(function(t){
-      if (withTask.length) task.appendChild(hbar(NAMES.task[t[0]], withTask.filter(function(x){ return x.task === t[0]; }).length, withTask.length, t[1]));
-    });
-
-    // Pago
-    var pay = $('pay'); pay.innerHTML = '';
-    var withPay = list.filter(function(x){ return x.pay; });
-    if (!withPay.length) pay.appendChild(el('p', 'muted', 'Nadie ha respondido esta pregunta todavía.'));
-    else [['si','var(--good)'],['tal_vez','var(--blue)'],['no','var(--warn)']].forEach(function(t){
-      pay.appendChild(hbar(NAMES.pay[t[0]], withPay.filter(function(x){ return x.pay === t[0]; }).length, withPay.length, t[1]));
-    });
-    if (withPay.length < list.length) pay.appendChild(el('p', 'muted small', (list.length - withPay.length) + ' no respondieron esta pregunta.'));
-    var vals = list.filter(function(x){ return typeof x.payCop === 'number'; }).map(function(x){ return x.payCop; });
-    var kp = $('cop-kpis'); kp.innerHTML = '';
-    function kpi(v, l){ var d = el('div', 'kpi'); d.appendChild(el('b', '', v)); d.appendChild(el('span', '', l)); kp.appendChild(d); }
-    if (vals.length){
-      kpi(cop(median(vals)), 'valor típico (mediana)');
-      kpi(cop(vals.reduce(function(a, x){ return a + x; }, 0) / vals.length), 'promedio');
-      kpi(cop(Math.min.apply(null, vals)) + ' – ' + cop(Math.max.apply(null, vals)), 'rango');
-      kpi(String(vals.length), vals.length === 1 ? 'persona dio un valor' : 'personas dieron un valor');
-    }
-    var cd = $('cop-dist'); cd.innerHTML = '';
-    if (!vals.length) cd.appendChild(el('p', 'muted', 'Aún nadie ha propuesto un valor.'));
-    else [['$0', 0, 0], ['$1 a $5.000', 1, 5000], ['$5.001 a $10.000', 5001, 10000], ['$10.001 a $20.000', 10001, 20000], ['$20.001 a $50.000', 20001, 50000], ['Más de $50.000', 50001, Infinity]]
-      .forEach(function(bk){ cd.appendChild(hbar(bk[0], vals.filter(function(v){ return v >= bk[1] && v <= bk[2]; }).length, vals.length, 'var(--violet)')); });
-
-    // Procedencia
-    var src = $('source'); src.innerHTML = '';
-    if (!b.known) src.appendChild(el('p', 'muted', 'Nadie ha indicado de dónde viene todavía.'));
-    else {
-      src.appendChild(el('p', '', 'Del círculo cercano: ' + pct(b.pct) + ' (' + b.close + ' de ' + b.known + ').'));
-      ['familia','companeros','externo','otros'].forEach(function(k2){
-        src.appendChild(hbar(NAMES.source[k2], list.filter(function(x){ return x.source === k2; }).length, b.known, CLOSE.indexOf(k2) >= 0 ? 'var(--warn)' : 'var(--good)'));
-      });
-      if (!b.biased) src.appendChild(el('p', 'muted small', 'La mayoría viene de fuera del círculo cercano. Bien.'));
-    }
-
-    // Segmentos
-    var sp = $('seg-pick');
-    if (!sp.children.length) SEGS.forEach(function(sg){
-      var bt = el('button', 'filter', sg[1]); bt.type = 'button'; bt.dataset.s = sg[0];
-      bt.addEventListener('click', function(){ segBy = sg[0]; renderAdmin(); }); sp.appendChild(bt);
-    });
-    Array.prototype.forEach.call(sp.children, function(bt){ bt.setAttribute('aria-pressed', bt.dataset.s === segBy ? 'true' : 'false'); });
-    var tb = $('seg-body'); tb.innerHTML = '';
-    var groups = Object.keys(NAMES[segBy]).concat(['']);
-    groups.forEach(function(g){
-      var rows = list.filter(function(x){ return (x[segBy] || '') === g; });
-      if (!rows.length) return;
-      var m = computeNps(rows), few = rows.length < 5;
-      var tr = el('tr');
-      tr.appendChild(el('td', '', g ? NAMES[segBy][g] : 'No respondió'));
-      tr.appendChild(el('td', 'n', rows.length));
-      var tdN = el('td', 'n' + (few ? ' few' : ''), signed(m.nps) + (few ? '*' : '')); tr.appendChild(tdN);
-      var wt = rows.filter(function(x){ return x.task; });
-      tr.appendChild(el('td', 'n' + (few ? ' few' : ''), wt.length ? pct(wt.filter(function(x){ return x.task === 'sin_ayuda'; }).length / wt.length * 100) : '–'));
-      var wp = rows.filter(function(x){ return x.pay; });
-      tr.appendChild(el('td', 'n' + (few ? ' few' : ''), wp.length ? pct(wp.filter(function(x){ return x.pay === 'si'; }).length / wp.length * 100) : '–'));
-      tb.appendChild(tr);
-    });
-
-    // Evolución por ronda (siempre sobre todas las respuestas)
-    var everything = all(), byR = {}, order = [];
-    everything.forEach(function(x){ if (!byR[x.round]){ byR[x.round] = []; order.push({ r: x.round, at: x.at }); } byR[x.round].push(x); });
-    var roundsSorted = rounds.filter(function(rn){ return byR[rn]; });
-    var trend = $('trend'); trend.innerHTML = '';
-    if (roundsSorted.length < 2){
-      trend.appendChild(el('p', 'muted', 'La evolución aparecerá cuando haya respuestas en al menos dos rondas. Abre una ronda nueva después de cada mejora del prototipo.'));
-    } else {
-      var wrap = el('div', 'tbl-wrap'), tbl = el('table'), th = el('thead'), hr = el('tr');
-      ['Ronda','Resp.','NPS','Sin ayuda','Pagaría'].forEach(function(h, i){ hr.appendChild(el('th', i ? 'n' : '', h)); });
-      th.appendChild(hr); tbl.appendChild(th);
-      var bd = el('tbody');
-      roundsSorted.forEach(function(rn){
-        var rows = byR[rn], m = computeNps(rows), tr = el('tr');
-        var wt = rows.filter(function(x){ return x.task; }), wp = rows.filter(function(x){ return x.pay; });
-        tr.appendChild(el('td', '', rn)); tr.appendChild(el('td', 'n', rows.length)); tr.appendChild(el('td', 'n', signed(m.nps)));
-        tr.appendChild(el('td', 'n', wt.length ? pct(wt.filter(function(x){ return x.task === 'sin_ayuda'; }).length / wt.length * 100) : '–'));
-        tr.appendChild(el('td', 'n', wp.length ? pct(wp.filter(function(x){ return x.pay === 'si'; }).length / wp.length * 100) : '–'));
-        bd.appendChild(tr);
-      });
-      tbl.appendChild(bd); wrap.appendChild(tbl); trend.appendChild(wrap);
-    }
-
-    // Motivos (filtrables)
-    var fw = $('filters');
-    if (!fw.children.length) [['todos','Todos'],['promotor','Promotores'],['pasivo','Pasivos'],['detractor','Detractores']].forEach(function(f){
-      var bt = el('button', 'filter', f[1]); bt.type = 'button'; bt.dataset.f = f[0];
-      bt.addEventListener('click', function(){ filter = f[0]; renderAdmin(); }); fw.appendChild(bt);
-    });
-    Array.prototype.forEach.call(fw.children, function(bt){ bt.setAttribute('aria-pressed', bt.dataset.f === filter ? 'true' : 'false'); });
-    var cm = $('comments'); cm.innerHTML = '';
-    var withWhy = list.filter(function(x){ return x.why && (filter === 'todos' || classify(x.score) === filter); }).sort(function(a, z){ return (z.at || 0) - (a.at || 0); });
-    if (!withWhy.length) cm.appendChild(el('p', 'muted', 'No hay respuestas en este grupo.'));
-    withWhy.forEach(function(x){
-      var cl = classify(x.score), item = el('div', 'comment'), head = el('div', 'comment-head');
-      var chip = el('span', 'chip-score ' + CLS[cl], x.score); head.appendChild(chip);
-      head.appendChild(el('span', '', LABEL[cl]));
-      if (x.task) head.appendChild(el('span', '', '· ' + NAMES.task[x.task]));
-      try { head.appendChild(el('span', '', '· ' + new Date(x.at).toLocaleDateString('es-CO', { day:'numeric', month:'short' }))); } catch(err){}
-      item.appendChild(head); item.appendChild(el('p', '', x.why)); cm.appendChild(item);
-    });
-
-    // Dificultades y necesidades
-    function texts(field, noneField, sumId, listId, noneLabel){
-      var none = list.filter(function(x){ return x[noneField]; }).length;
-      var items = list.filter(function(x){ return x[field]; }).sort(function(a, z){ return (z.at || 0) - (a.at || 0); });
-      $(sumId).textContent = items.length + (items.length === 1 ? ' persona escribió algo' : ' personas escribieron algo') + ' · ' + none + ' ' + noneLabel + '.';
-      var box = $(listId); box.innerHTML = '';
-      if (!items.length) box.appendChild(el('p', 'muted', 'Todavía no hay respuestas escritas.'));
-      items.forEach(function(x){ box.appendChild(el('p', '', x[field])); });
-    }
-    texts('diff', 'diffNone', 'diff-sum', 'diff-list', 'dijeron que no tuvieron dificultades');
-    texts('need', 'needNone', 'need-sum', 'need-list', 'dijeron que no necesita mejoras');
-  }
-  $('round-filter').addEventListener('change', function(){ roundView = this.value; renderAdmin(); });
-  $('kiosk').addEventListener('change', function(){ var a = cfg(); a.kiosk = this.checked; write(ADM, a); });
-
-  // Rondas
-  function nextRoundName(){ var c = cfg(), n = c.rounds.length + 1; while (c.rounds.indexOf('Ronda ' + n) >= 0) n++; return 'Ronda ' + n; }
-  $('new-round').addEventListener('click', function(){ $('round-next-name').textContent = nextRoundName(); $('round-confirm').hidden = false; this.hidden = true; });
-  $('round-cancel').addEventListener('click', function(){ $('round-confirm').hidden = true; $('new-round').hidden = false; });
-  $('round-yes').addEventListener('click', function(){
-    var a = cfg(), name = nextRoundName(); a.round = name; a.rounds.push(name); write(ADM, a);
-    $('round-confirm').hidden = true; $('new-round').hidden = false; roundView = 'todas'; renderAdmin();
-  });
-
-  // Exportar
-  function toCsv(list){
-    var head = ['codigo','ronda','fecha','nps','categoria','por_que','tarea','dificultades','sin_dificultades','le_falta','no_necesita_mejoras','pagaria','cop_mes','edad','ocupacion','tiene_dificultades','procedencia'];
-    var rows = [head];
-    list.slice().sort(function(a, z){ return (a.at || 0) - (z.at || 0); }).forEach(function(x){
-      var d = ''; try { d = new Date(x.at).toISOString().slice(0, 10); } catch(e){}
-      rows.push([x.code || '', x.round, d, x.score, classify(x.score), x.why || '', x.task || '', x.diff || '', x.diffNone ? 'si' : '', x.need || '', x.needNone ? 'si' : '', x.pay || '', typeof x.payCop === 'number' ? x.payCop : '', x.age || '', x.occ || '', x.hasDiff || '', x.source || '']);
-    });
-    return { csv: rows.map(function(r){ return r.map(function(v){ v = String(v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n'), n: rows.length - 1 };
-  }
-  var lastDone = null;
   $('copy-mine').addEventListener('click', function(){
-    if (!lastDone) return;
-    var csv = toCsv([lastDone]).csv, box = $('mine-box'), ok = $('mine-ok');
-    box.value = csv;
+    if (!last) return;
+    var cols = Object.keys(last), csv = cols.join(',') + '\n' + cols.map(function(c){ var v = String(last[c]); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',');
+    var box = $('mine-box'), ok = $('mine-ok'); box.value = csv;
     function fallback(){ box.hidden = false; box.focus(); box.select(); ok.textContent = 'Selecciona el texto y cópialo.'; ok.hidden = false; }
-    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiado. Pégalo en WhatsApp o en un correo para el equipo de Coclia.'; ok.hidden = false; }, fallback); }
-    catch(e){ fallback(); }
-  });
-  $('csv').addEventListener('click', function(){
-    var out = toCsv(all()), csv = out.csv, rows = { length: out.n + 1 };
-    var box = $('csv-box'), ok = $('csv-ok'); box.value = csv;
-    function fallback(){ box.hidden = false; box.focus(); box.select(); ok.textContent = 'Selecciona el texto y cópialo para pegarlo en Excel o Google Sheets.'; ok.hidden = false; }
-    try { navigator.clipboard.writeText(csv).then(function(){ ok.textContent = 'Copiadas ' + (rows.length - 1) + ' respuestas. Pégalas en Excel o Google Sheets.'; ok.hidden = false; box.hidden = true; }, fallback); }
-    catch(e){ fallback(); }
+    try { navigator.clipboard.writeText(csv).then(function(){ box.hidden = true; ok.textContent = 'Copiado. Pégalo en WhatsApp o en un correo.'; ok.hidden = false; }, fallback); } catch(e){ fallback(); }
   });
 
-
-  /* ---------- Borrar resultados ---------- */
-  function fillDelete(){
-    var sel = $('del-what'), keep = sel.value, list = all(), rs = {};
-    list.forEach(function(r){ rs[r.round] = (rs[r.round] || 0) + 1; });
-    sel.innerHTML = '';
-    var o = document.createElement('option'); o.value = '__todo'; o.textContent = 'Todas las respuestas (' + list.length + ')'; sel.appendChild(o);
-    Object.keys(rs).sort(function(a, b){ return a.localeCompare(b, 'es', { numeric: true }); }).forEach(function(r){
-      var op = document.createElement('option'); op.value = r; op.textContent = 'Solo ' + r + ' (' + rs[r] + ')'; sel.appendChild(op);
-    });
-    if (Array.prototype.some.call(sel.options, function(op){ return op.value === keep; })) sel.value = keep;
-    $('del-btn').disabled = !list.length;
-    $('del-card').hidden = false;
+  /* ---------- ¿Ya respondió esta ronda? ---------- */
+  function checkAnswered(){
+    if (kiosk) return;
+    var id = read(ANSW, {})[round], rec = id ? store().responses[id] : null;
+    if (!rec || !$('v-form').hidden) return;
+    last = rec;
+    $('done-title').textContent = 'Ya respondiste en ' + round;
+    $('done-ok').textContent = 'Tus respuestas de esta ronda ya están guardadas. ¡Gracias!';
+    $('done-send').textContent = 'Si el equipo abre una nueva ronda, podrás participar otra vez.';
+    $('done-code').textContent = rec.codigo;
+    $('next-person').hidden = true;
+    show('done');
   }
-  $('del-btn').addEventListener('click', function(){
-    var v = $('del-what').value, n = $('del-what').selectedOptions[0].textContent;
-    $('del-q').textContent = v === '__todo' ? '¿Borrar TODAS las respuestas? No se puede deshacer.' : '¿Borrar las respuestas de ' + v + '? No se puede deshacer.';
-    $('del-confirm').hidden = false; this.hidden = true; $('del-ok').hidden = true;
-  });
-  $('del-no').addEventListener('click', function(){ $('del-confirm').hidden = true; $('del-btn').hidden = false; });
-  $('del-yes').addEventListener('click', function(){
-    var v = $('del-what').value, n = (function(){
-      var st = store(), c = 0;
-      Object.keys(st.responses).forEach(function(k){ if (v === '__todo' || st.responses[k].round === v){ delete st.responses[k]; c++; } });
-      write(KEY, st);
-      if (v === '__todo'){ try { localStorage.removeItem(DEV); } catch(e){} }
-      return c;
-    })();
-    $('del-confirm').hidden = true; $('del-btn').hidden = false;
-    $('del-ok').textContent = n ? 'Se borraron ' + n + (n === 1 ? ' respuesta.' : ' respuestas.') : 'No había respuestas para borrar.';
-    $('del-ok').hidden = false;
-    renderAdmin();
-  });
-
-  window.addEventListener('storage', function(e){ if ((e.key === KEY || e.key === ADM) && !$('v-admin').hidden) renderAdmin(); });
-
-  renderSurvey();
+  var art = document.querySelector('#v-start .mascot svg');
+  if (art) $('done-mascot').insertBefore(art.cloneNode(true), $('done-mascot').firstChild);
+  ans = blank();
+  checkAnswered();
 })();
 </script>
