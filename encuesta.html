@@ -180,6 +180,8 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
 .comment.card{padding:16px;gap:6px}
 .head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .head-right .linkbtn{min-height:40px}
+.cancel-link{align-self:center;color:var(--muted)}
+.cancel-box{display:flex;flex-direction:column;gap:10px;background:rgba(255,184,107,.10);border:1px solid rgba(255,184,107,.5);border-radius:16px;padding:14px}
 .op-del{align-self:flex-start;margin-top:4px}
 .danger-card{border-color:rgba(255,184,107,.45)}
 .op-name{color:var(--fg);font-size:15px;font-weight:800}
@@ -342,6 +344,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
       <div class="nav">
         <button class="btn" id="prev">Atrás</button>
         <button class="btn primary" id="next">Siguiente</button>
+      </div>
+      <button type="button" class="linkbtn cancel-link" id="cancel">Cancelar encuesta</button>
+      <div class="cancel-box" id="cancel-box" role="alertdialog" aria-labelledby="cancel-q" hidden>
+        <p id="cancel-q" style="font-weight:800">¿Cancelar la encuesta? Lo que respondiste no se guardará.</p>
+        <div class="row">
+          <button type="button" class="btn" id="cancel-no">Seguir respondiendo</button>
+          <button type="button" class="btn danger-solid" id="cancel-yes">Sí, cancelar</button>
+        </div>
       </div>
     </div>
   </section>
@@ -698,6 +708,7 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     $('prev').style.visibility = n === 1 ? 'hidden' : 'visible';
     $('next').textContent = n === TOTAL ? 'Enviar respuestas' : 'Siguiente';
     $('err').hidden = true;
+    $('cancel-box').hidden = true; $('cancel').hidden = false;
     var focusEl = document.querySelector('.step[data-step="' + n + '"] .q');
     if (focusEl){ focusEl.setAttribute('tabindex', '-1'); try { focusEl.focus({ preventScroll: true }); } catch(e){} }
     window.scrollTo(0, 0);
@@ -709,6 +720,14 @@ label.q{font-family:var(--font-display);font-weight:600;line-height:1.25}
     if (step < TOTAL) goStep(step + 1); else submit();
   });
   $('prev').addEventListener('click', function(){ collect(step); if (step > 1) goStep(step - 1); });
+  /* Cancelar: sale sin guardar nada */
+  $('cancel').addEventListener('click', function(){ $('cancel-box').hidden = false; this.hidden = true; $('cancel-no').focus(); });
+  $('cancel-no').addEventListener('click', function(){ $('cancel-box').hidden = true; $('cancel').hidden = false; });
+  $('cancel-yes').addEventListener('click', function(){
+    $('cancel-box').hidden = true; $('cancel').hidden = false;
+    reset(); person = ''; $('name').value = '';
+    show('start');
+  });
 
   function show(v){
     ['start', 'form', 'done', 'lock', 'results'].forEach(function(n){ $('v-' + n).hidden = n !== v; });
